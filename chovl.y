@@ -12,11 +12,28 @@ void yyerror(const char *s) {
 
 %}
 
-%token INTEGER
+%union {
+    int i;
+    float f;
+}
+
+%token <i> INTEGER
+%token <f> FLOAT
+%type <i> integer_constant
+%type <f> float_constant
 
 %%
 
-constant : INTEGER { std::cout << $1 << std::endl; }
+constant : integer_constant
+         | float_constant
          ;
+
+
+
+integer_constant : INTEGER { $$ = $1; std::cout << $$ << std::endl; }
+                 ;
+
+float_constant   : FLOAT   { $$ = $1; std::cout << $$ << std::endl; }
+                 ;
 
 %%
