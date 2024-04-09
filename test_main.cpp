@@ -50,9 +50,9 @@ int CheckFiles(const char* test_name, FILE* output_file, FILE* gold_file) {
 }
 
 #define CHECK_OPEN(file, name, file_name, overall_result)             \
-  if (file == NULL) {                                                 \
+  if ((file) == NULL) {                                               \
     fprintf(stderr, "Could not open %s file: %s\n", name, file_name); \
-    overall_result = 1;                                               \
+    (overall_result) = 1;                                             \
   }
 
 int main(int argc, char* argv[]) {
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
   char output_file_name[1024];
   char gold_file_name[1024];
   for (int i = 1; i < argc; i++) {
-    sprintf(input_file_name, "%s.in", argv[i]);
+    sprintf(input_file_name, "%s.chv", argv[i]);
     sprintf(output_file_name, "%s.out", argv[i]);
     sprintf(gold_file_name, "%s.gold", argv[i]);
 
