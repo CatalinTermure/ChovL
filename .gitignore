@@ -3,3 +3,4 @@ gen/
 tests/*.log
 tests/*.out
 design.txt
+.vscode/
