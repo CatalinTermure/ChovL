@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "*.pl": "prolog",
-        "iosfwd": "cpp",
-        "fstream": "cpp",
-        "iostream": "cpp",
-        "typeinfo": "cpp"
-    }
-}
