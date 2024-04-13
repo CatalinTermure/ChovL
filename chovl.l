@@ -18,7 +18,6 @@ WHITESPACE    [ \t\n]
 
 "("                                     { return OPEN_PAREN; }
 ")"                                     { return CLOSED_PAREN; }
-"extern"                                { return KW_EXTERN; }
 "fn"                                    { return KW_FN; }
 "i32"                                   { return KW_I32; }
 "f32"                                   { return KW_F32; }

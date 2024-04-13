@@ -28,7 +28,7 @@ void yyerror(const char *s) {
     char *str;
 }
 
-%type <node> binary_expression constant function_definition function_body concrete_function_definition extern_function_definition function_declaration
+%type <node> binary_expression constant function_definition function_body function_prototype function_declaration
 %type <aggregate> function_definition_list
 %type <param> parameter
 %type <params> parameter_list
@@ -36,7 +36,7 @@ void yyerror(const char *s) {
 %type <op> operator
 
 %token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR
-%token KW_FN KW_I32 KW_F32 KW_EXTERN
+%token KW_FN KW_I32 KW_F32
 %token OP_ASSIGN
 %token <str> IDENTIFIER
 %token <i32> I32
@@ -52,14 +52,11 @@ function_definition_list : function_definition { $$ = new chovl::ASTRootNode(); 
                          | function_definition_list function_definition { $1->push_back($2);  $$ = $1; }
                          ;
 
-function_definition : concrete_function_definition { $$ = $1; }
-                    | extern_function_definition { $$ = $1; }
+function_definition : function_declaration function_body { $$ = nullptr; }
+                    | function_prototype { $$ = $1; }
                     ;
 
-concrete_function_definition : function_declaration function_body { $$ = nullptr; }
-                             ;
-
-extern_function_definition : KW_EXTERN function_declaration SEPARATOR { $$ = $2; }
+function_prototype : function_declaration SEPARATOR { $$ = $1; }
 
 function_declaration : KW_FN IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN ARROW type_identifier { $$ = new chovl::FunctionDeclNode($2, $4, $7); }
                      | KW_FN IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::Primitive::kNone)); }
