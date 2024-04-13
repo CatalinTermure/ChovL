@@ -11,15 +11,7 @@
 
 namespace chovl {
 
-struct Context {
-  Context();
-  ~Context() = default;
-
-  llvm::LLVMContext llvm_context;
-  std::unique_ptr<llvm::IRBuilder<>> llvm_builder;
-  std::unique_ptr<llvm::Module> llvm_module;
-  std::unordered_map<std::string, llvm::Value *> value_map;
-};
+struct Context;
 
 class ASTNode {
  public:
@@ -30,17 +22,6 @@ class ASTAggregateNode {
  public:
   virtual std::vector<llvm::Value *> codegen(chovl::Context &context) = 0;
   virtual void push_back(ASTNode *node) = 0;
-};
-
-class AST {
- public:
-  explicit AST(ASTAggregateNode *root);
-
-  void codegen();
-
- private:
-  Context llvm_context;
-  ASTAggregateNode *root_;
 };
 
 enum class Operator : uint8_t {
@@ -104,7 +85,7 @@ enum class Primitive { kNone, kI32, kF32 };
 
 class TypeNode {
  public:
-  TypeNode(Primitive primitive);
+  explicit TypeNode(Primitive primitive);
 
   llvm::Type *type(Context &context);
 
@@ -157,6 +138,39 @@ class ASTRootNode : public ASTAggregateNode {
 
  private:
   std::vector<std::unique_ptr<ASTNode>> nodes_;
+};
+
+class FunctionDefNode : public ASTNode {
+ public:
+  FunctionDefNode(ASTNode *decl, ASTNode *body);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::unique_ptr<FunctionDeclNode> decl_;
+  std::unique_ptr<ASTNode> body_;
+};
+
+struct Context {
+  Context();
+  ~Context() = default;
+
+  llvm::LLVMContext llvm_context;
+  std::unique_ptr<llvm::IRBuilder<>> llvm_builder;
+  std::unique_ptr<llvm::Module> llvm_module;
+  std::unordered_map<std::string, llvm::Value *> value_map;
+  std::unordered_map<std::string, FunctionDeclNode *> function_map;
+};
+
+class AST {
+ public:
+  explicit AST(ASTAggregateNode *root);
+
+  void codegen();
+
+ private:
+  Context llvm_context;
+  ASTAggregateNode *root_;
 };
 
 }  // namespace chovl

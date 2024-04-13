@@ -38,7 +38,9 @@ set(TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 add_executable(chovl_test test_main.cpp)
 target_link_libraries(chovl_test parser)
 
-add_test(NAME chovl_test COMMAND chovl_test ${TEST_DIR}/test_func_decl_trailing ${TEST_DIR}/test_func_decl)
+add_test(NAME chovl_test COMMAND chovl_test
+            ${TEST_DIR}/test_func_decl_trailing ${TEST_DIR}/test_func_decl
+            ${TEST_DIR}/test_func_def_trailing ${TEST_DIR}/test_func_def)
 set_tests_properties(chovl_test PROPERTIES TIMEOUT 30)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

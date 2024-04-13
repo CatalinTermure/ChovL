@@ -1,13 +1,16 @@
 #include "ast.h"
 
+#include <llvm/IR/Verifier.h>
+
 namespace chovl {
 
+using llvm::BasicBlock;
 using llvm::ConstantFP;
 using llvm::ConstantInt;
+using llvm::Function;
+using llvm::FunctionType;
 using llvm::Type;
 using llvm::Value;
-using llvm::FunctionType;
-using llvm::Function;
 
 Context::Context() {
   llvm_builder = std::make_unique<llvm::IRBuilder<>>(llvm_context);
@@ -77,6 +80,7 @@ ParameterNode::ParameterNode(TypeNode* type, const char* name)
 
 std::vector<Value*> ASTRootNode::codegen(Context& context) {
   std::vector<Value*> vals;
+  vals.reserve(nodes_.size());
   for (auto& node : nodes_) {
     vals.push_back(node->codegen(context));
   }
@@ -94,15 +98,34 @@ Value* FunctionDeclNode::codegen(Context& context) {
     param_types.push_back(param->type(context));
   }
 
-  FunctionType* func_type = FunctionType::get(return_type_->type(context),
-                                              param_types, false);
+  FunctionType* func_type =
+      FunctionType::get(return_type_->type(context), param_types, false);
   Function* func = Function::Create(func_type, Function::ExternalLinkage,
-                                     identifier_, context.llvm_module.get());
+                                    identifier_, context.llvm_module.get());
 
   unsigned idx = 0;
   for (auto& arg : func->args()) {
     arg.setName(params_->nodes()[idx++]->name());
   }
+
+  return func;
+}
+
+FunctionDefNode::FunctionDefNode(ASTNode* decl, ASTNode* body)
+    : decl_(dynamic_cast<FunctionDeclNode*>(decl)), body_(body) {}
+
+Value* FunctionDefNode::codegen(Context& context) {
+  Function* func = static_cast<Function*>(decl_->codegen(context));
+  if (!func) {
+    return nullptr;
+  }
+
+  BasicBlock* block = BasicBlock::Create(context.llvm_context, "entry", func);
+  context.llvm_builder->SetInsertPoint(block);
+
+  context.llvm_builder->CreateRet(body_->codegen(context));
+
+  llvm::verifyFunction(*func);
 
   return func;
 }

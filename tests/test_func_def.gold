@@ -1,0 +1,14 @@
+define i32 @foo(i32 %a) {
+entry:
+  ret i32 5
+}
+
+define i32 @bar(i32 %a, float %b) {
+entry:
+  ret i32 18
+}
+
+define float @baz(float %a, i32 %b, float %c) {
+entry:
+  ret float add (float add (float 1.000000e+00, i32 4), float 0x4010CCCCC0000000)
+}

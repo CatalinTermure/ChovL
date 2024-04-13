@@ -52,7 +52,7 @@ function_definition_list : function_definition { $$ = new chovl::ASTRootNode(); 
                          | function_definition_list function_definition { $1->push_back($2);  $$ = $1; }
                          ;
 
-function_definition : function_declaration function_body { $$ = nullptr; }
+function_definition : function_declaration function_body { $$ = new chovl::FunctionDefNode($1, $2); }
                     | function_prototype { $$ = $1; }
                     ;
 
@@ -73,7 +73,8 @@ type_identifier : KW_I32 { $$ = new chovl::TypeNode(chovl::Primitive::kI32); }
                 | KW_F32 { $$ = new chovl::TypeNode(chovl::Primitive::kF32); }
                 ;
 
-function_body : OP_ASSIGN binary_expression { $$ = $2; }
+function_body : OP_ASSIGN binary_expression SEPARATOR { $$ = $2; }
+              | OP_ASSIGN constant SEPARATOR { $$ = $2; }
               ;
 
 binary_expression : constant operator constant { $$ = new chovl::BinaryExprNode($2, $1, $3); }
