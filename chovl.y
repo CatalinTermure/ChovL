@@ -60,6 +60,7 @@ function_prototype : function_declaration SEPARATOR { $$ = $1; }
 
 function_declaration : KW_FN IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN ARROW type_identifier { $$ = new chovl::FunctionDeclNode($2, $4, $7); }
                      | KW_FN IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::Primitive::kNone)); }
+                     | KW_FN type_identifier IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($3, $5, $2); }
                      ;
 
 parameter_list : parameter { $$ = new chovl::ParameterListNode(); $$->push_back($1); }
