@@ -1,0 +1,5 @@
+extern fn foo(i32 a) -> i32;
+
+extern fn bar(i32 a, f32 b) -> i32;
+
+extern fn baz(f32 a, i32 b, f32 c) -> f32;

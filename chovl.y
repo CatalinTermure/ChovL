@@ -1,7 +1,5 @@
 %{
 
-#include "ast.h"
-
 #include <iostream>
 
 extern int yylex();
@@ -12,28 +10,82 @@ void yyerror(const char *s) {
 
 %}
 
-%union {
-    int i;
-    float f;
+%code requires {
+#include "ast.h"
 }
 
-%token <i> INTEGER
-%token <f> FLOAT
-%type <i> integer_constant
-%type <f> float_constant
+%union {
+    int32_t i32;
+    int64_t i64;
+    float f32;
+    double f64;
+    chovl::ASTNode *node;
+    chovl::TypeNode *type_id;
+    chovl::ParameterNode *param;
+    chovl::ParameterListNode *params;
+    chovl::ASTAggregateNode *aggregate;
+    chovl::Operator op;
+    char *str;
+}
+
+%type <node> binary_expression constant function_definition function_body concrete_function_definition extern_function_definition function_declaration
+%type <aggregate> function_definition_list
+%type <param> parameter
+%type <params> parameter_list
+%type <type_id> type_identifier
+%type <op> operator
+
+%token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR
+%token KW_FN KW_I32 KW_F32 KW_EXTERN
+%token OP_ASSIGN
+%token <str> IDENTIFIER
+%token <i32> I32
+%token <f32> F32
+%left <op> OP_ADD
 
 %%
 
-constant : integer_constant
-         | float_constant
+program : function_definition_list { chovl::AST($1).codegen(); }
+        ;
+
+function_definition_list : function_definition { $$ = new chovl::ASTRootNode(); $$->push_back($1); }
+                         | function_definition_list function_definition { $1->push_back($2);  $$ = $1; }
+                         ;
+
+function_definition : concrete_function_definition { $$ = $1; }
+                    | extern_function_definition { $$ = $1; }
+                    ;
+
+concrete_function_definition : function_declaration function_body { $$ = nullptr; }
+                             ;
+
+extern_function_definition : KW_EXTERN function_declaration SEPARATOR { $$ = $2; }
+
+function_declaration : KW_FN IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN ARROW type_identifier { $$ = new chovl::FunctionDeclNode($2, $4, $7); }
+                     | KW_FN IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::Primitive::kNone)); }
+                     ;
+
+parameter_list : parameter { $$ = new chovl::ParameterListNode(); $$->push_back($1); }
+               | parameter_list parameter { $1->push_back($2); $$ = $1; }
+
+parameter : type_identifier IDENTIFIER { $$ = new chovl::ParameterNode($1, $2); }
+          ;
+
+type_identifier : KW_I32 { $$ = new chovl::TypeNode(chovl::Primitive::kI32); }
+                | KW_F32 { $$ = new chovl::TypeNode(chovl::Primitive::kF32); }
+                ;
+
+function_body : OP_ASSIGN binary_expression { $$ = $2; }
+              ;
+
+binary_expression : constant operator constant { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+                  | binary_expression operator constant { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+                  ;
+
+constant : F32 { $$ = new chovl::F32Node($1); }
+         | I32 { $$ = new chovl::I32Node($1); }
          ;
 
-
-
-integer_constant : INTEGER { $$ = $1; std::cout << $$ << std::endl; }
-                 ;
-
-float_constant   : FLOAT   { $$ = $1; std::cout << $$ << std::endl; }
-                 ;
+operator : OP_ADD { $$ = $1; }
 
 %%

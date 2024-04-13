@@ -10,6 +10,14 @@ int CheckFiles(const char* test_name, FILE* output_file, FILE* gold_file) {
   int line = 1;
   int col = 1;
   while (output_char != EOF && gold_char != EOF) {
+    if (output_char == '\n' || output_char == ' ') {
+      output_char = fgetc(output_file);
+      continue;
+    }
+    if (gold_char == '\n' || gold_char == ' ') {
+      gold_char = fgetc(gold_file);
+      continue;
+    }
     if (output_char != gold_char) {
       fprintf(stderr,
               "%s: Mismatch at line %d, col %d: expected '%c', got '%c'\n",

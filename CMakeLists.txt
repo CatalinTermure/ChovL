@@ -3,8 +3,14 @@ project(chovl VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(FLEX)
-find_package(BISON)
+find_package(FLEX REQUIRED)
+find_package(BISON REQUIRED)
+find_package(LLVM REQUIRED CONFIG)
+
+include_directories(${LLVM_INCLUDE_DIRS})
+separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+add_definitions(${LLVM_DEFINITIONS_LIST})
+llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 include(CTest)
 enable_testing()
@@ -20,7 +26,9 @@ include_directories(include/)
 add_library(parser STATIC
   ${FLEX_chovl_lex_OUTPUTS}
   ${BISON_chovl_yacc_OUTPUTS}
+  src/ast.cpp
 )
+target_link_libraries(parser ${llvm_libs})
 
 add_executable(chovl main.cpp)
 target_link_libraries(chovl parser)
@@ -30,7 +38,7 @@ set(TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 add_executable(chovl_test test_main.cpp)
 target_link_libraries(chovl_test parser)
 
-add_test(NAME chovl_test COMMAND chovl_test ${TEST_DIR}/test_int ${TEST_DIR}/test_float)
+add_test(NAME chovl_test COMMAND chovl_test ${TEST_DIR}/test_extern_foo)
 set_tests_properties(chovl_test PROPERTIES TIMEOUT 30)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
