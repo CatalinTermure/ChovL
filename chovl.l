@@ -28,6 +28,7 @@ WHITESPACE    [ \t\n]
 0|([1-9]{DIGIT}*)                       { parse_int(yytext); return I32; }
 (0|([1-9]{DIGIT}*))?\.{DIGIT}+          { yylval.f32 = atof(yytext); return F32; }
 "+"                                     { yylval.op = chovl::Operator::kAdd; return OP_ADD; }
+"-"                                     { yylval.op = chovl::Operator::kSub; return OP_SUB; }
 .                                       ;
 
 %%

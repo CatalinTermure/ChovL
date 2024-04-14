@@ -82,6 +82,11 @@ Value* BinaryExprNode::codegen(Context& context) {
         return context.llvm_builder->CreateFAdd(lhs, rhs, "addtmp");
       }
       return context.llvm_builder->CreateAdd(lhs, rhs, "addtmp");
+    case Operator::kSub:
+      if (lhs->getType()->isFloatingPointTy()) {
+        return context.llvm_builder->CreateFSub(lhs, rhs, "addtmp");
+      }
+      return context.llvm_builder->CreateSub(lhs, rhs, "addtmp");
     default:
       return nullptr;
   }

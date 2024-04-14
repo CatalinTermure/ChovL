@@ -41,7 +41,7 @@ void yyerror(const char *s) {
 %token <str> IDENTIFIER
 %token <i32> I32
 %token <f32> F32
-%left <op> OP_ADD
+%left <op> OP_ADD OP_SUB
 
 %%
 
@@ -90,5 +90,7 @@ constant : F32 { $$ = new chovl::F32Node($1); }
          ;
 
 operator : OP_ADD { $$ = $1; }
+         | OP_SUB { $$ = $1; }
+         ;
 
 %%

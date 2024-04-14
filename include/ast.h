@@ -28,6 +28,7 @@ class ASTAggregateNode {
 
 enum class Operator : uint8_t {
   kAdd,
+  kSub,
 };
 
 class I32Node : public ASTNode {
