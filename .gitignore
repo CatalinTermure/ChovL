@@ -2,5 +2,6 @@ build/
 gen/
 tests/*.log
 tests/*.out
+tests/*.asm
 design.txt
 .vscode/

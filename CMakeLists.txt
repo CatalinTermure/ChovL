@@ -35,14 +35,19 @@ target_link_libraries(chovl parser)
 
 set(TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
-add_executable(chovl_test test_main.cpp)
-target_link_libraries(chovl_test parser)
+add_executable(chovl_diff_test diff_test_main.cpp)
+target_link_libraries(chovl_diff_test parser)
+
+add_executable(chovl_validation_test validation_test_main.cpp)
 
 file(GLOB TEST_FILES ${TEST_DIR}/*.chv)
 foreach(TEST_FILE ${TEST_FILES})
   get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
-  add_test(NAME ${TEST_NAME} COMMAND chovl_test ${TEST_DIR}/${TEST_NAME})
-  set_tests_properties(${TEST_NAME} PROPERTIES TIMEOUT 30)
+  add_test(NAME ${TEST_NAME}_diff COMMAND chovl_diff_test ${TEST_DIR}/${TEST_NAME})
+  add_test(NAME ${TEST_NAME}_validation COMMAND chovl_validation_test ${TEST_DIR}/${TEST_NAME})
+  set_tests_properties(${TEST_NAME}_diff PROPERTIES TIMEOUT 30)
+  set_tests_properties(${TEST_NAME}_validation PROPERTIES TIMEOUT 30)
+  set_tests_properties(${TEST_NAME}_validation PROPERTIES DEPENDS ${TEST_NAME}_diff)
 endforeach()
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
