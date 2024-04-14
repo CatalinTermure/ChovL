@@ -12,6 +12,32 @@ using llvm::FunctionType;
 using llvm::Type;
 using llvm::Value;
 
+namespace {
+Value* CastValue(Context& context, Value* src, Type* src_type, Type* dst_type) {
+  if (src_type == dst_type) {
+    return src;
+  }
+
+  if (src_type->isIntegerTy() && dst_type->isIntegerTy()) {
+    return context.llvm_builder->CreateIntCast(src, dst_type, true);
+  }
+
+  if (src_type->isFloatingPointTy() && dst_type->isFloatingPointTy()) {
+    return context.llvm_builder->CreateFPCast(src, dst_type);
+  }
+
+  if (src_type->isIntegerTy() && dst_type->isFloatingPointTy()) {
+    return context.llvm_builder->CreateSIToFP(src, dst_type);
+  }
+
+  if (src_type->isFloatingPointTy() && dst_type->isIntegerTy()) {
+    return context.llvm_builder->CreateFPToSI(src, dst_type);
+  }
+
+  return nullptr;
+}
+}  // namespace
+
 Context::Context() {
   llvm_builder = std::make_unique<llvm::IRBuilder<>>(llvm_context);
   llvm_module = std::make_unique<llvm::Module>("chovl", llvm_context);
@@ -128,6 +154,17 @@ Value* FunctionDefNode::codegen(Context& context) {
   llvm::verifyFunction(*func);
 
   return func;
+}
+
+CastOpNode::CastOpNode(TypeNode* type, ASTNode* value)
+    : type_(type), value_(value) {}
+
+Value* CastOpNode::codegen(Context& context) {
+  Type* dst_type = type_->type(context);
+  Value* src = value_->codegen(context);
+  Type* src_type = src->getType();
+
+  return CastValue(context, src, src_type, dst_type);
 }
 
 }  // namespace chovl

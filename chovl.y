@@ -28,7 +28,7 @@ void yyerror(const char *s) {
     char *str;
 }
 
-%type <node> binary_expression constant function_definition function_body function_prototype function_declaration
+%type <node> binary_expression constant function_definition function_body function_prototype function_declaration unary_expression
 %type <aggregate> function_definition_list
 %type <param> parameter
 %type <params> parameter_list
@@ -77,9 +77,13 @@ function_body : OP_ASSIGN binary_expression SEPARATOR { $$ = $2; }
               | OP_ASSIGN constant SEPARATOR { $$ = $2; }
               ;
 
-binary_expression : constant operator constant { $$ = new chovl::BinaryExprNode($2, $1, $3); }
-                  | binary_expression operator constant { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+binary_expression : unary_expression operator unary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+                  | binary_expression operator unary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
                   ;
+
+unary_expression : constant { $$ = $1; }
+                 | type_identifier constant { $$ = new chovl::CastOpNode($1, $2); }
+                 ;
 
 constant : F32 { $$ = new chovl::F32Node($1); }
          | I32 { $$ = new chovl::I32Node($1); }

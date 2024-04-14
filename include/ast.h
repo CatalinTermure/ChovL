@@ -151,6 +151,17 @@ class FunctionDefNode : public ASTNode {
   std::unique_ptr<ASTNode> body_;
 };
 
+class CastOpNode : public ASTNode {
+ public:
+  CastOpNode(TypeNode *type, ASTNode *value);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::unique_ptr<TypeNode> type_;
+  std::unique_ptr<ASTNode> value_;
+};
+
 struct Context {
   Context();
   ~Context() = default;
