@@ -16,12 +16,14 @@ struct Context;
 class ASTNode {
  public:
   virtual llvm::Value *codegen(chovl::Context &context) = 0;
+  virtual ~ASTNode() = default;
 };
 
 class ASTAggregateNode {
  public:
   virtual std::vector<llvm::Value *> codegen(chovl::Context &context) = 0;
   virtual void push_back(ASTNode *node) = 0;
+  virtual ~ASTAggregateNode() = default;
 };
 
 enum class Operator : uint8_t {

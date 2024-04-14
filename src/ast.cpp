@@ -78,8 +78,9 @@ Value* BinaryExprNode::codegen(Context& context) {
 
   switch (op_) {
     case Operator::kAdd:
-      if (lhs->getType()->isFloatingPointTy())
+      if (lhs->getType()->isFloatingPointTy()) {
         return context.llvm_builder->CreateFAdd(lhs, rhs, "addtmp");
+      }
       return context.llvm_builder->CreateAdd(lhs, rhs, "addtmp");
     default:
       return nullptr;
