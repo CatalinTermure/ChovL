@@ -86,6 +86,7 @@ binary_expression : unary_expression operator unary_expression { $$ = new chovl:
 
 unary_expression : constant { $$ = $1; }
                  | type_identifier constant { $$ = new chovl::CastOpNode($1, $2); }
+                 | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
                  ;
 
 constant : F32 { $$ = new chovl::F32Node($1); }
