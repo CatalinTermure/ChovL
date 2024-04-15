@@ -10,5 +10,5 @@ entry:
 
 define float @baz(float %a, i32 %b, float %c) {
 entry:
-  ret float 0x4022666660000000
+  ret float 0x4014CCCCC0000000
 }

@@ -3,3 +3,5 @@ fn i32 foo(i32 a);
 fn i32 bar(i32 a, f32 b);
 
 fn f32 baz(f32 a, i32 b, f32 c);
+
+fn i32 main();

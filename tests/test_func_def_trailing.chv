@@ -2,4 +2,4 @@ fn foo(i32 a) -> i32 = 5;
 
 fn bar(i32 a, f32 b) -> i32 = 15 + 3;
 
-fn baz(f32 a, i32 b, f32 c) -> f32 = 1.0 + f32 4 + 4.2;
+fn baz(f32 a, i32 b, f32 c) -> f32 = 1.0 + 4.2;
