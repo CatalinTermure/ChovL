@@ -5,3 +5,5 @@ fn bar(i32 a, f32 b) -> i32;
 fn baz(f32 a, i32 b, f32 c) -> f32;
 
 fn main() -> i32;
+
+fn foobar();

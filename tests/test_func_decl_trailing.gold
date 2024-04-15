@@ -5,3 +5,5 @@ declare i32 @bar(i32, float)
 declare float @baz(float, i32, float)
 
 declare i32 @main()
+
+declare void @foobar()
