@@ -3,5 +3,7 @@ gen/
 tests/*.log
 tests/*.out
 tests/*.asm
+tests/*.ll
+tests/*.s
 design.txt
 .vscode/

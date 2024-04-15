@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
   char gold_file_name[1024];
   for (int i = 1; i < argc; i++) {
     sprintf(input_file_name, "%s.chv", argv[i]);
-    sprintf(output_file_name, "%s.out", argv[i]);
+    sprintf(output_file_name, "%s.ll", argv[i]);
     sprintf(gold_file_name, "%s.gold", argv[i]);
 
     FILE* gold_file = fopen(gold_file_name, "r");

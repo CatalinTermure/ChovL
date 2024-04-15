@@ -16,8 +16,8 @@ int main(int argc, char* argv[]) {
   char output_file_name[1024];
   char llvm_as_command[2400];
   for (int i = 1; i < argc; i++) {
-    sprintf(input_file_name, "%s.out", argv[i]);
-    sprintf(output_file_name, "%s.asm", argv[i]);
+    sprintf(input_file_name, "%s.ll", argv[i]);
+    sprintf(output_file_name, "%s.s", argv[i]);
 
     // change llvm-as-18 to whichever llvm assembler you have
     sprintf(llvm_as_command, "llvm-as-18 -o %s %s", output_file_name,
