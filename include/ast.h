@@ -132,9 +132,9 @@ class FunctionDeclNode : public ASTNode {
   std::unique_ptr<TypeNode> return_type_;
 };
 
-class ASTRootNode : public ASTAggregateNode {
+class ASTListNode : public ASTAggregateNode {
  public:
-  ASTRootNode() = default;
+  ASTListNode() = default;
 
   void push_back(ASTNode *node) override { nodes_.emplace_back(node); }
   std::vector<llvm::Value *> codegen(Context &context) override;
@@ -152,6 +152,17 @@ class FunctionDefNode : public ASTNode {
  private:
   std::unique_ptr<FunctionDeclNode> decl_;
   std::unique_ptr<ASTNode> body_;
+};
+
+class FunctionCallNode : public ASTNode {
+ public:
+  FunctionCallNode(const char *identifier, ASTAggregateNode *params);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::string identifier_;
+  std::unique_ptr<ASTAggregateNode> params_;
 };
 
 class CastOpNode : public ASTNode {

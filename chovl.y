@@ -28,15 +28,15 @@ void yyerror(const char *s) {
     char *str;
 }
 
-%type <node> binary_expression constant function_definition function_body function_prototype function_declaration unary_expression expression
-%type <aggregate> function_definition_list
+%type <node> binary_expression constant function_definition function_body function_prototype function_declaration unary_expression expression function_call
+%type <aggregate> function_definition_list actual_param_list
 %type <param> parameter
-%type <params> parameter_list
+%type <params> formal_param_list non_void_formal_param_list
 %type <type_id> type_identifier
 %type <op> operator
 
-%token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR
-%token KW_FN KW_I32 KW_F32
+%token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR COMMA
+%token KW_FN KW_I32 KW_F32 KW_AS
 %token OP_ASSIGN
 %token <str> IDENTIFIER
 %token <i32> I32
@@ -48,7 +48,7 @@ void yyerror(const char *s) {
 program : function_definition_list { chovl::AST($1).codegen(); }
         ;
 
-function_definition_list : function_definition { $$ = new chovl::ASTRootNode(); $$->push_back($1); }
+function_definition_list : function_definition { $$ = new chovl::ASTListNode(); $$->push_back($1); }
                          | function_definition_list function_definition { $1->push_back($2);  $$ = $1; }
                          ;
 
@@ -58,14 +58,18 @@ function_definition : function_declaration function_body { $$ = new chovl::Funct
 
 function_prototype : function_declaration SEPARATOR { $$ = $1; }
 
-function_declaration : KW_FN IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN ARROW type_identifier { $$ = new chovl::FunctionDeclNode($2, $4, $7); }
-                     | KW_FN IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::Primitive::kNone)); }
-                     | KW_FN type_identifier IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($3, $5, $2); }
+function_declaration : KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN ARROW type_identifier { $$ = new chovl::FunctionDeclNode($2, $4, $7); }
+                     | KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::Primitive::kNone)); }
+                     | KW_FN type_identifier IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($3, $5, $2); }
                      ;
 
-parameter_list : parameter_list parameter { $1->push_back($2); $$ = $1; }
-               | { $$ = new chovl::ParameterListNode(); }
-               ;
+formal_param_list : formal_param_list COMMA parameter { $1->push_back($3); $$ = $1; }
+                  | non_void_formal_param_list { $$ = $1; }
+                  | { $$ = new chovl::ParameterListNode(); }
+                  ;
+
+non_void_formal_param_list : parameter { $$ = new chovl::ParameterListNode(); $$->push_back($1); }
+                           ;
 
 parameter : type_identifier IDENTIFIER { $$ = new chovl::ParameterNode($1, $2); }
           ;
@@ -86,9 +90,18 @@ binary_expression : unary_expression operator unary_expression { $$ = new chovl:
                   ;
 
 unary_expression : constant { $$ = $1; }
-                 | type_identifier constant { $$ = new chovl::CastOpNode($1, $2); }
+                 | constant KW_AS type_identifier { $$ = new chovl::CastOpNode($3, $1); }
                  | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
+                 | function_call { $$ = $1; }
                  ;
+
+function_call : IDENTIFIER OPEN_PAREN actual_param_list CLOSED_PAREN { $$ = new chovl::FunctionCallNode($1, $3); }
+              | IDENTIFIER OPEN_PAREN CLOSED_PAREN { $$ = new chovl::FunctionCallNode($1, new chovl::ASTListNode()); }
+              ;
+
+actual_param_list : expression { $$ = new chovl::ASTListNode(); $$->push_back($1); }
+                  | actual_param_list COMMA unary_expression { $1->push_back($3); $$ = $1; }
+                  ;
 
 constant : F32 { $$ = new chovl::F32Node($1); }
          | I32 { $$ = new chovl::I32Node($1); }

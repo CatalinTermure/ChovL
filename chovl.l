@@ -19,11 +19,13 @@ WHITESPACE    [ \t\n]
 "("                                     { return OPEN_PAREN; }
 ")"                                     { return CLOSED_PAREN; }
 "fn"                                    { return KW_FN; }
+"as"                                    { return KW_AS; }
 "i32"                                   { return KW_I32; }
 "f32"                                   { return KW_F32; }
 "="                                     { return OP_ASSIGN; }
 "->"                                    { return ARROW; }
 ";"                                     { return SEPARATOR; }
+","                                     { return COMMA; }
 {LETTER}({LETTER}|{DIGIT})*             { yylval.str = (char*)malloc(strlen(yytext)); strcpy(yylval.str, yytext); return IDENTIFIER; }
 0|([1-9]{DIGIT}*)                       { parse_int(yytext); return I32; }
 (0|([1-9]{DIGIT}*))?\.{DIGIT}+          { yylval.f32 = atof(yytext); return F32; }

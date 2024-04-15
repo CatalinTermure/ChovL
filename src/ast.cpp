@@ -112,7 +112,7 @@ Type* TypeNode::type(Context& context) {
 ParameterNode::ParameterNode(TypeNode* type, const char* name)
     : type_(type), name_(name) {}
 
-std::vector<Value*> ASTRootNode::codegen(Context& context) {
+std::vector<Value*> ASTListNode::codegen(Context& context) {
   std::vector<Value*> vals;
   vals.reserve(nodes_.size());
   for (auto& node : nodes_) {
@@ -173,6 +173,20 @@ Value* CastOpNode::codegen(Context& context) {
   Type* src_type = src->getType();
 
   return CastValue(context, src, src_type, dst_type);
+}
+
+FunctionCallNode::FunctionCallNode(const char* identifier,
+                                   ASTAggregateNode* params)
+    : identifier_(identifier), params_(params) {}
+
+Value* FunctionCallNode::codegen(Context& context) {
+  Function* func = context.llvm_module->getFunction(identifier_);
+  if (!func) {
+    return nullptr;
+  }
+
+  std::vector<Value*> args = params_->codegen(context);
+  return context.llvm_builder->CreateCall(func, args);
 }
 
 }  // namespace chovl

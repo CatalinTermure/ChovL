@@ -1,0 +1,7 @@
+fn i32 foo() = 5;
+
+fn i32 bar(i32 a) = 10;
+
+fn i32 main1() = foo();
+
+fn i32 main2() = bar(3 - (5 - 3));
