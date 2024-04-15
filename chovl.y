@@ -63,8 +63,9 @@ function_declaration : KW_FN IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN A
                      | KW_FN type_identifier IDENTIFIER OPEN_PAREN parameter_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($3, $5, $2); }
                      ;
 
-parameter_list : parameter { $$ = new chovl::ParameterListNode(); $$->push_back($1); }
-               | parameter_list parameter { $1->push_back($2); $$ = $1; }
+parameter_list : parameter_list parameter { $1->push_back($2); $$ = $1; }
+               | { $$ = new chovl::ParameterListNode(); }
+               ;
 
 parameter : type_identifier IDENTIFIER { $$ = new chovl::ParameterNode($1, $2); }
           ;
