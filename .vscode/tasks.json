@@ -1,0 +1,65 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Translate ChovL to LLVM IR",
+      "type": "shell",
+      "command": "${workspaceFolder}/build/chovl < ${file} > ${fileDirname}/${fileBasenameNoExtension}.ll",
+    },
+    {
+      "label": "Assemble LLVM IR to object file",
+      "type": "shell",
+      "command": "llc-18",
+      "args": [
+        "${fileDirname}/${fileBasenameNoExtension}.ll",
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}.s"
+      ],
+      "dependsOn": [
+        "Translate ChovL to LLVM IR"
+      ],
+    },
+    {
+      "label": "Compile object file to executable",
+      "type": "shell",
+      "command": "gcc",
+      "args": [
+        "${fileDirname}/${fileBasenameNoExtension}.s",
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}"
+      ],
+      "dependsOn": [
+        "Assemble LLVM IR to object file"
+      ],
+    },
+    {
+      "label": "Run executable",
+      "type": "shell",
+      "command": "${fileDirname}/${fileBasenameNoExtension}",
+    },
+    {
+      "label": "Build and run ChovL",
+      "dependsOn": [
+        "Translate ChovL to LLVM IR",
+        "Assemble LLVM IR to object file",
+        "Compile object file to executable",
+        "Run executable"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "dependsOrder": "sequence",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      }
+    }
+  ]
+}
