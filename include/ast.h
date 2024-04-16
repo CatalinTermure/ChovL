@@ -71,6 +71,16 @@ class F64Node : public ASTNode {
   double value_;
 };
 
+class CharNode : public ASTNode {
+ public:
+  explicit CharNode(char value) : value_(value) {}
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  char value_;
+};
+
 class BinaryExprNode : public ASTNode {
  public:
   BinaryExprNode(Operator op, ASTNode *lhs, ASTNode *rhs)
@@ -84,7 +94,7 @@ class BinaryExprNode : public ASTNode {
   std::unique_ptr<ASTNode> rhs_;
 };
 
-enum class Primitive { kNone, kI32, kF32 };
+enum class Primitive { kNone, kI32, kF32, kChar };
 
 class TypeNode {
  public:

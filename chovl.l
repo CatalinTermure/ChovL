@@ -22,12 +22,15 @@ WHITESPACE    [ \t\n]
 "}"                                     { return CLOSED_BRACK; }
 "fn"                                    { return KW_FN; }
 "as"                                    { return KW_AS; }
+"char"                                  { return KW_CHAR; }
 "i32"                                   { return KW_I32; }
 "f32"                                   { return KW_F32; }
 "="                                     { return OP_ASSIGN; }
 "->"                                    { return ARROW; }
 ";"                                     { return SEPARATOR; }
 ","                                     { return COMMA; }
+'.'                                     { yylval.chr = yytext[1]; return CHAR; }
+'\\n'                                   { yylval.chr = 10; return CHAR; }
 {LETTER}({LETTER}|{DIGIT})*             { yylval.str = (char*)malloc(strlen(yytext)); strcpy(yylval.str, yytext); return IDENTIFIER; }
 0|([1-9]{DIGIT}*)                       { parse_int(yytext); return I32; }
 (0|([1-9]{DIGIT}*))?\.{DIGIT}+          { yylval.f32 = atof(yytext); return F32; }

@@ -57,11 +57,11 @@ void AST::codegen() {
 }
 
 Value* I32Node::codegen(Context& context) {
-  return ConstantInt::get(Type::getInt32Ty(context.llvm_context), value_);
+  return context.llvm_builder->getInt32(value_);
 }
 
 Value* I64Node::codegen(Context& context) {
-  return ConstantInt::get(Type::getInt64Ty(context.llvm_context), value_);
+  return context.llvm_builder->getInt64(value_);
 }
 
 Value* F32Node::codegen(Context& context) {
@@ -102,6 +102,8 @@ Type* TypeNode::type(Context& context) {
       return Type::getInt32Ty(context.llvm_context);
     case Primitive::kF32:
       return Type::getFloatTy(context.llvm_context);
+    case Primitive::kChar:
+      return Type::getInt8Ty(context.llvm_context);
     case Primitive::kNone:
       return Type::getVoidTy(context.llvm_context);
   }
@@ -189,15 +191,20 @@ Value* FunctionCallNode::codegen(Context& context) {
   return context.llvm_builder->CreateCall(func, args);
 }
 
-BlockNode::BlockNode(ASTAggregateNode* body, bool is_void) : body_(body), is_void_(is_void) {}
+BlockNode::BlockNode(ASTAggregateNode* body, bool is_void)
+    : body_(body), is_void_(is_void) {}
 
-Value *BlockNode::codegen(Context &context) {
-  std::vector<Value *> vals = body_->codegen(context);
+Value* BlockNode::codegen(Context& context) {
+  std::vector<Value*> vals = body_->codegen(context);
 
   if (is_void_ || vals.empty()) {
     return nullptr;
   }
   return vals.back();
+}
+
+Value* CharNode::codegen(Context& context) {
+  return context.llvm_builder->getInt8(value_);
 }
 
 }  // namespace chovl

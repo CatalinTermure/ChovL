@@ -1,0 +1,11 @@
+declare void @foo(i8)
+
+define i8 @bar(i32 %a) {
+entry:
+  ret i8 98
+}
+
+define i8 @baz(i32 %a) {
+entry:
+  ret i8 10
+}

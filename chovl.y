@@ -26,6 +26,7 @@ void yyerror(const char *s) {
     chovl::ASTAggregateNode *aggregate;
     chovl::Operator op;
     char *str;
+    char chr;
 }
 
 %type <node> binary_expression constant function_definition function_body function_prototype function_declaration unary_expression expression block_node function_call
@@ -37,11 +38,12 @@ void yyerror(const char *s) {
 
 %token OPEN_BRACK CLOSED_BRACK
 %token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR COMMA
-%token KW_FN KW_I32 KW_F32 KW_AS
+%token KW_FN KW_I32 KW_F32 KW_AS KW_CHAR
 %token OP_ASSIGN
 %token <str> IDENTIFIER
 %token <i32> I32
 %token <f32> F32
+%token <chr> CHAR
 %left <op> OP_ADD OP_SUB
 
 %%
@@ -77,6 +79,7 @@ parameter : type_identifier IDENTIFIER { $$ = new chovl::ParameterNode($1, $2); 
 
 type_identifier : KW_I32 { $$ = new chovl::TypeNode(chovl::Primitive::kI32); }
                 | KW_F32 { $$ = new chovl::TypeNode(chovl::Primitive::kF32); }
+                | KW_CHAR { $$ = new chovl::TypeNode(chovl::Primitive::kChar); }
                 ;
 
 function_body : OP_ASSIGN expression SEPARATOR { $$ = $2; }
@@ -117,6 +120,7 @@ actual_param_list : expression { $$ = new chovl::ASTListNode(); $$->push_back($1
 
 constant : F32 { $$ = new chovl::F32Node($1); }
          | I32 { $$ = new chovl::I32Node($1); }
+         | CHAR { $$ = new chovl::CharNode($1); }
          ;
 
 operator : OP_ADD { $$ = $1; }
