@@ -176,6 +176,17 @@ class CastOpNode : public ASTNode {
   std::unique_ptr<ASTNode> value_;
 };
 
+class BlockNode : public ASTNode {
+ public:
+  BlockNode(ASTAggregateNode *body, bool is_void = false);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::unique_ptr<ASTAggregateNode> body_;
+  bool is_void_;
+};
+
 struct Context {
   Context();
   ~Context() = default;

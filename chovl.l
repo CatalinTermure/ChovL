@@ -18,6 +18,8 @@ WHITESPACE    [ \t\n]
 
 "("                                     { return OPEN_PAREN; }
 ")"                                     { return CLOSED_PAREN; }
+"{"                                     { return OPEN_BRACK; }
+"}"                                     { return CLOSED_BRACK; }
 "fn"                                    { return KW_FN; }
 "as"                                    { return KW_AS; }
 "i32"                                   { return KW_I32; }

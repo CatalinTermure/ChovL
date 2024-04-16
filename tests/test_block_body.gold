@@ -1,0 +1,8 @@
+declare i32 @putchar(i32)
+
+define i32 @main() {
+entry:
+  %0 = call i32 @putchar(i32 72)
+  %1 = call i32 @putchar(i32 72)
+  ret i32 0
+}

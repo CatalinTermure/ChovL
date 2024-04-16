@@ -189,4 +189,15 @@ Value* FunctionCallNode::codegen(Context& context) {
   return context.llvm_builder->CreateCall(func, args);
 }
 
+BlockNode::BlockNode(ASTAggregateNode* body, bool is_void) : body_(body), is_void_(is_void) {}
+
+Value *BlockNode::codegen(Context &context) {
+  std::vector<Value *> vals = body_->codegen(context);
+
+  if (is_void_ || vals.empty()) {
+    return nullptr;
+  }
+  return vals.back();
+}
+
 }  // namespace chovl

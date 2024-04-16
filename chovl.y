@@ -28,13 +28,14 @@ void yyerror(const char *s) {
     char *str;
 }
 
-%type <node> binary_expression constant function_definition function_body function_prototype function_declaration unary_expression expression function_call
-%type <aggregate> function_definition_list actual_param_list
+%type <node> binary_expression constant function_definition function_body function_prototype function_declaration unary_expression expression block_node function_call
+%type <aggregate> function_definition_list actual_param_list expression_list
 %type <param> parameter
 %type <params> formal_param_list non_void_formal_param_list
 %type <type_id> type_identifier
 %type <op> operator
 
+%token OPEN_BRACK CLOSED_BRACK
 %token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR COMMA
 %token KW_FN KW_I32 KW_F32 KW_AS
 %token OP_ASSIGN
@@ -79,7 +80,17 @@ type_identifier : KW_I32 { $$ = new chovl::TypeNode(chovl::Primitive::kI32); }
                 ;
 
 function_body : OP_ASSIGN expression SEPARATOR { $$ = $2; }
+              | block_node { $$ = $1; }
               ;
+
+block_node : OPEN_BRACK expression_list CLOSED_BRACK { $$ = new chovl::BlockNode($2); }
+           | OPEN_BRACK expression_list SEPARATOR CLOSED_BRACK { $$ = new chovl::BlockNode($2, true); }
+           | OPEN_BRACK CLOSED_BRACK { $$ = new chovl::BlockNode(new chovl::ASTListNode()); }
+           ;
+
+expression_list : expression { $$ = new chovl::ASTListNode(); $$->push_back($1); }
+                | expression_list SEPARATOR expression { $1->push_back($3); $$ = $1; }
+                ;
 
 expression : binary_expression { $$ = $1; }
            | unary_expression { $$ = $1; }
@@ -93,6 +104,7 @@ unary_expression : constant { $$ = $1; }
                  | constant KW_AS type_identifier { $$ = new chovl::CastOpNode($3, $1); }
                  | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
                  | function_call { $$ = $1; }
+                 | block_node { $$ = $1; }
                  ;
 
 function_call : IDENTIFIER OPEN_PAREN actual_param_list CLOSED_PAREN { $$ = new chovl::FunctionCallNode($1, $3); }

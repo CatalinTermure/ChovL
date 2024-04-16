@@ -1,0 +1,9 @@
+fn i32 putchar(i32 ch);
+
+fn i32 main() {
+  putchar(72);
+  {
+    putchar(72);
+    0
+  }
+}
