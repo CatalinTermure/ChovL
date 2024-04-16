@@ -3,3 +3,7 @@ fn foo(char c);
 fn char bar(i32 a) = 'b';
 
 fn char baz(i32 a) = '\n';
+
+fn char foobar() = 'B' + ' ';
+
+fn char barbar() = 'b' - ' ' + ' ';

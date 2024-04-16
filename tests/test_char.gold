@@ -9,3 +9,13 @@ define i8 @baz(i32 %a) {
 entry:
   ret i8 10
 }
+
+define i8 @foobar() {
+entry:
+  ret i8 98
+}
+
+define i8 @barbar() {
+entry:
+  ret i8 98
+}
