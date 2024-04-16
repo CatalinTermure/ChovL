@@ -115,7 +115,7 @@ function_call : IDENTIFIER OPEN_PAREN actual_param_list CLOSED_PAREN { $$ = new 
               ;
 
 actual_param_list : expression { $$ = new chovl::ASTListNode(); $$->push_back($1); }
-                  | actual_param_list COMMA unary_expression { $1->push_back($3); $$ = $1; }
+                  | actual_param_list COMMA expression { $1->push_back($3); $$ = $1; }
                   ;
 
 constant : F32 { $$ = new chovl::F32Node($1); }
