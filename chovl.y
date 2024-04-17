@@ -29,7 +29,7 @@ void yyerror(const char *s) {
     char chr;
 }
 
-%type <node> binary_expression constant function_definition function_body function_prototype function_declaration unary_expression expression block_node function_call
+%type <node> binary_expression constant function_definition function_body function_prototype function_declaration primary_expression expression block_node function_call
 %type <aggregate> function_definition_list actual_param_list expression_list
 %type <param> parameter
 %type <params> formal_param_list non_void_formal_param_list
@@ -96,14 +96,14 @@ expression_list : expression { $$ = new chovl::ASTListNode(); $$->push_back($1);
                 ;
 
 expression : binary_expression { $$ = $1; }
-           | unary_expression { $$ = $1; }
+           | primary_expression { $$ = $1; }
            ;
 
-binary_expression : unary_expression operator unary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
-                  | binary_expression operator unary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+binary_expression : primary_expression operator primary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+                  | binary_expression operator primary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
                   ;
 
-unary_expression : constant { $$ = $1; }
+primary_expression : constant { $$ = $1; }
                  | constant KW_AS type_identifier { $$ = new chovl::CastOpNode($3, $1); }
                  | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
                  | function_call { $$ = $1; }
