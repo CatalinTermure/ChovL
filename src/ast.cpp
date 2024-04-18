@@ -9,11 +9,10 @@ using llvm::ConstantFP;
 using llvm::ConstantInt;
 using llvm::Function;
 using llvm::FunctionType;
-using llvm::Type;
-using llvm::Value;
 
 namespace {
-Value* CastValue(Context& context, Value* src, Type* src_type, Type* dst_type) {
+llvm::Value* CastValue(Context& context, llvm::Value* src, llvm::Type* src_type,
+                       llvm::Type* dst_type) {
   if (src_type == dst_type) {
     return src;
   }
@@ -46,7 +45,7 @@ Context::Context() {
 AST::AST(ASTAggregateNode* root) { root_ = root; }
 
 void AST::codegen() {
-  std::vector<Value*> vals = root_->codegen(llvm_context);
+  std::vector<llvm::Value*> vals = root_->codegen(llvm_context);
   std::string type_str;
   llvm::raw_string_ostream rso(type_str);
   for (auto val : vals) {
@@ -56,25 +55,25 @@ void AST::codegen() {
   std::cout << rso.str();
 }
 
-Value* I32Node::codegen(Context& context) {
+llvm::Value* I32Node::codegen(Context& context) {
   return context.llvm_builder->getInt32(value_);
 }
 
-Value* I64Node::codegen(Context& context) {
+llvm::Value* I64Node::codegen(Context& context) {
   return context.llvm_builder->getInt64(value_);
 }
 
-Value* F32Node::codegen(Context& context) {
-  return ConstantFP::get(Type::getFloatTy(context.llvm_context), value_);
+llvm::Value* F32Node::codegen(Context& context) {
+  return ConstantFP::get(llvm::Type::getFloatTy(context.llvm_context), value_);
 }
 
-Value* F64Node::codegen(Context& context) {
-  return ConstantFP::get(Type::getDoubleTy(context.llvm_context), value_);
+llvm::Value* F64Node::codegen(Context& context) {
+  return ConstantFP::get(llvm::Type::getDoubleTy(context.llvm_context), value_);
 }
 
-Value* BinaryExprNode::codegen(Context& context) {
-  Value* lhs = lhs_->codegen(context);
-  Value* rhs = rhs_->codegen(context);
+llvm::Value* BinaryExprNode::codegen(Context& context) {
+  llvm::Value* lhs = lhs_->codegen(context);
+  llvm::Value* rhs = rhs_->codegen(context);
 
   switch (op_) {
     case Operator::kAdd:
@@ -94,28 +93,13 @@ Value* BinaryExprNode::codegen(Context& context) {
   return nullptr;
 }
 
-TypeNode::TypeNode(Primitive primitive) { primitive_ = primitive; }
-
-Type* TypeNode::type(Context& context) {
-  switch (primitive_) {
-    case Primitive::kI32:
-      return Type::getInt32Ty(context.llvm_context);
-    case Primitive::kF32:
-      return Type::getFloatTy(context.llvm_context);
-    case Primitive::kChar:
-      return Type::getInt8Ty(context.llvm_context);
-    case Primitive::kNone:
-      return Type::getVoidTy(context.llvm_context);
-  }
-
-  return nullptr;
-}
+TypeNode::TypeNode(Type type) : type_(type) {}
 
 ParameterNode::ParameterNode(TypeNode* type, const char* name)
     : type_(type), name_(name) {}
 
-std::vector<Value*> ASTListNode::codegen(Context& context) {
-  std::vector<Value*> vals;
+std::vector<llvm::Value*> ASTListNode::codegen(Context& context) {
+  std::vector<llvm::Value*> vals;
   vals.reserve(nodes_.size());
   for (auto& node : nodes_) {
     vals.push_back(node->codegen(context));
@@ -128,14 +112,14 @@ FunctionDeclNode::FunctionDeclNode(const char* identifier,
                                    TypeNode* return_type)
     : identifier_(identifier), params_(params), return_type_(return_type) {}
 
-Value* FunctionDeclNode::codegen(Context& context) {
-  std::vector<Type*> param_types;
+llvm::Value* FunctionDeclNode::codegen(Context& context) {
+  std::vector<llvm::Type*> param_types;
   for (auto& param : params_->nodes()) {
-    param_types.push_back(param->type(context));
+    param_types.push_back(param->llvm_type(context));
   }
 
   FunctionType* func_type =
-      FunctionType::get(return_type_->type(context), param_types, false);
+      FunctionType::get(return_type_->llvm_type(context), param_types, false);
   Function* func = Function::Create(func_type, Function::ExternalLinkage,
                                     identifier_, context.llvm_module.get());
 
@@ -150,7 +134,7 @@ Value* FunctionDeclNode::codegen(Context& context) {
 FunctionDefNode::FunctionDefNode(ASTNode* decl, ASTNode* body)
     : decl_(dynamic_cast<FunctionDeclNode*>(decl)), body_(body) {}
 
-Value* FunctionDefNode::codegen(Context& context) {
+llvm::Value* FunctionDefNode::codegen(Context& context) {
   Function* func = static_cast<Function*>(decl_->codegen(context));
   if (!func) {
     return nullptr;
@@ -169,10 +153,10 @@ Value* FunctionDefNode::codegen(Context& context) {
 CastOpNode::CastOpNode(TypeNode* type, ASTNode* value)
     : type_(type), value_(value) {}
 
-Value* CastOpNode::codegen(Context& context) {
-  Type* dst_type = type_->type(context);
-  Value* src = value_->codegen(context);
-  Type* src_type = src->getType();
+llvm::Value* CastOpNode::codegen(Context& context) {
+  llvm::Type* dst_type = type_->llvm_type(context);
+  llvm::Value* src = value_->codegen(context);
+  llvm::Type* src_type = src->getType();
 
   return CastValue(context, src, src_type, dst_type);
 }
@@ -181,21 +165,22 @@ FunctionCallNode::FunctionCallNode(const char* identifier,
                                    ASTAggregateNode* params)
     : identifier_(identifier), params_(params) {}
 
-Value* FunctionCallNode::codegen(Context& context) {
+llvm::Value* FunctionCallNode::codegen(Context& context) {
   Function* func = context.llvm_module->getFunction(identifier_);
   if (!func) {
+    llvm::errs() << "Function not found: " << identifier_ << "\n";
     return nullptr;
   }
 
-  std::vector<Value*> args = params_->codegen(context);
+  std::vector<llvm::Value*> args = params_->codegen(context);
   return context.llvm_builder->CreateCall(func, args);
 }
 
 BlockNode::BlockNode(ASTAggregateNode* body, bool is_void)
     : body_(body), is_void_(is_void) {}
 
-Value* BlockNode::codegen(Context& context) {
-  std::vector<Value*> vals = body_->codegen(context);
+llvm::Value* BlockNode::codegen(Context& context) {
+  std::vector<llvm::Value*> vals = body_->codegen(context);
 
   if (is_void_ || vals.empty()) {
     return nullptr;
@@ -203,7 +188,7 @@ Value* BlockNode::codegen(Context& context) {
   return vals.back();
 }
 
-Value* CharNode::codegen(Context& context) {
+llvm::Value* CharNode::codegen(Context& context) {
   return context.llvm_builder->getInt8(value_);
 }
 

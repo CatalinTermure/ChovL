@@ -62,7 +62,7 @@ function_definition : function_declaration function_body { $$ = new chovl::Funct
 function_prototype : function_declaration SEPARATOR { $$ = $1; }
 
 function_declaration : KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN ARROW type_identifier { $$ = new chovl::FunctionDeclNode($2, $4, $7); }
-                     | KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::Primitive::kNone)); }
+                     | KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::PrimitiveType::kNone)); }
                      | KW_FN type_identifier IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($3, $5, $2); }
                      ;
 
@@ -77,9 +77,9 @@ non_void_formal_param_list : parameter { $$ = new chovl::ParameterListNode(); $$
 parameter : type_identifier IDENTIFIER { $$ = new chovl::ParameterNode($1, $2); }
           ;
 
-type_identifier : KW_I32 { $$ = new chovl::TypeNode(chovl::Primitive::kI32); }
-                | KW_F32 { $$ = new chovl::TypeNode(chovl::Primitive::kF32); }
-                | KW_CHAR { $$ = new chovl::TypeNode(chovl::Primitive::kChar); }
+type_identifier : KW_I32 { $$ = new chovl::TypeNode(chovl::PrimitiveType::kI32); }
+                | KW_F32 { $$ = new chovl::TypeNode(chovl::PrimitiveType::kF32); }
+                | KW_CHAR { $$ = new chovl::TypeNode(chovl::PrimitiveType::kChar); }
                 ;
 
 function_body : OP_ASSIGN expression SEPARATOR { $$ = $2; }

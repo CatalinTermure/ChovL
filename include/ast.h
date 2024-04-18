@@ -1,5 +1,4 @@
-#ifndef CHOVL_AST_H_
-#define CHOVL_AST_H_
+#pragma once
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
@@ -9,19 +8,21 @@
 #include <memory>
 #include <unordered_map>
 
-namespace chovl {
+#include "context.h"
+#include "scope.h"
+#include "value.h"
 
-struct Context;
+namespace chovl {
 
 class ASTNode {
  public:
-  virtual llvm::Value *codegen(chovl::Context &context) = 0;
+  virtual llvm::Value *codegen(Context &context) = 0;
   virtual ~ASTNode() = default;
 };
 
 class ASTAggregateNode {
  public:
-  virtual std::vector<llvm::Value *> codegen(chovl::Context &context) = 0;
+  virtual std::vector<llvm::Value *> codegen(Context &context) = 0;
   virtual void push_back(ASTNode *node) = 0;
   virtual ~ASTAggregateNode() = default;
 };
@@ -94,23 +95,22 @@ class BinaryExprNode : public ASTNode {
   std::unique_ptr<ASTNode> rhs_;
 };
 
-enum class Primitive { kNone, kI32, kF32, kChar };
-
 class TypeNode {
  public:
-  explicit TypeNode(Primitive primitive);
+  explicit TypeNode(Type type);
 
-  llvm::Type *type(Context &context);
+  Type get(Context &context) { return type_; }
+  llvm::Type *llvm_type(Context &context) { return type_.llvm_type(context); }
 
  private:
-  Primitive primitive_;
+  Type type_;
 };
 
 class ParameterNode {
  public:
   ParameterNode(TypeNode *type, const char *name);
 
-  llvm::Type *type(Context &context) { return type_->type(context); }
+  llvm::Type *llvm_type(Context &context) { return type_->llvm_type(context); }
   std::string name() { return name_; }
 
  private:
@@ -197,17 +197,6 @@ class BlockNode : public ASTNode {
   bool is_void_;
 };
 
-struct Context {
-  Context();
-  ~Context() = default;
-
-  llvm::LLVMContext llvm_context;
-  std::unique_ptr<llvm::IRBuilder<>> llvm_builder;
-  std::unique_ptr<llvm::Module> llvm_module;
-  std::unordered_map<std::string, llvm::Value *> value_map;
-  std::unordered_map<std::string, FunctionDeclNode *> function_map;
-};
-
 class AST {
  public:
   explicit AST(ASTAggregateNode *root);
@@ -220,5 +209,3 @@ class AST {
 };
 
 }  // namespace chovl
-
-#endif  // CHOVL_AST_H_
