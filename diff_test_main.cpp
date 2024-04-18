@@ -51,7 +51,6 @@ int CheckFiles(const char* test_name, FILE* output_file, FILE* gold_file) {
       }
       gold_char = fgetc(gold_file);
     }
-    return 1;
   }
 
   return 0;

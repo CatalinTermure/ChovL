@@ -208,6 +208,27 @@ class VariableDeclarationNode : public ASTNode {
   std::unique_ptr<ASTNode> value_;
 };
 
+class VariableAssignmentNode : public ASTNode {
+ public:
+  VariableAssignmentNode(const char *name, ASTNode *value);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::string name_;
+  std::unique_ptr<ASTNode> value_;
+};
+
+class VariableNode : public ASTNode {
+ public:
+  explicit VariableNode(const char *name);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::string name_;
+};
+
 class AST {
  public:
   explicit AST(ASTAggregateNode *root);

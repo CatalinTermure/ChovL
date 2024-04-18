@@ -42,6 +42,7 @@ class SymbolicValue {
   SymbolicValue &operator=(SymbolicValue &&);
 
   llvm::Value *llvm_value() const { return value_; }
+  llvm::AllocaInst *llvm_alloca() const { return alloca_; }
   llvm::Type *llvm_type(Context &context) const {
     return type_.llvm_type(context);
   }

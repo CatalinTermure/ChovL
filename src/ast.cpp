@@ -214,4 +214,20 @@ llvm::Value* VariableDeclarationNode::codegen(Context& context) {
   return nullptr;
 }
 
+VariableNode::VariableNode(const char* name) : name_(name) {}
+
+llvm::Value* VariableNode::codegen(Context& context) {
+  SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
+  return context.llvm_builder->CreateLoad(sym.llvm_alloca()->getAllocatedType(),
+                                          sym.llvm_alloca(), name_);
+}
+
+VariableAssignmentNode::VariableAssignmentNode(const char* name, ASTNode* value)
+    : name_(name), value_(value) {}
+
+llvm::Value* VariableAssignmentNode::codegen(Context& context) {
+  SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
+  llvm::Value* val = value_->codegen(context);
+  return context.llvm_builder->CreateStore(val, sym.llvm_alloca());
+}
 }  // namespace chovl

@@ -96,6 +96,7 @@ block_node : OPEN_BRACK expression_list CLOSED_BRACK { $$ = new chovl::BlockNode
 statement : expression SEPARATOR { $$ = $1; }
           | type_identifier IDENTIFIER SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, nullptr); }
           | type_identifier IDENTIFIER OP_ASSIGN expression SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, $4); }
+          | IDENTIFIER OP_ASSIGN expression SEPARATOR { $$ = new chovl::VariableAssignmentNode($1, $3); }
           ;
 
 statement_list : statement { $$ = new chovl::ASTListNode(); $$->push_back($1); }
@@ -119,6 +120,7 @@ primary_expression : constant { $$ = $1; }
                    | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
                    | function_call { $$ = $1; }
                    | block_node { $$ = $1; }
+                   | IDENTIFIER { $$ = new chovl::VariableNode($1); }
                    ;
 
 function_call : IDENTIFIER OPEN_PAREN actual_param_list CLOSED_PAREN { $$ = new chovl::FunctionCallNode($1, $3); }
