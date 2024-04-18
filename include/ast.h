@@ -98,7 +98,7 @@ class TypeNode {
  public:
   explicit TypeNode(Type type);
 
-  Type get(Context &context) { return type_; }
+  Type get() { return type_; }
   llvm::Type *llvm_type(Context &context) { return type_.llvm_type(context); }
 
  private:
@@ -194,6 +194,18 @@ class BlockNode : public ASTNode {
  private:
   std::unique_ptr<ASTAggregateNode> body_;
   bool is_void_;
+};
+
+class VariableDeclarationNode : public ASTNode {
+ public:
+  VariableDeclarationNode(TypeNode *type, const char *name, ASTNode *value);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::unique_ptr<TypeNode> type_;
+  std::string name_;
+  std::unique_ptr<ASTNode> value_;
 };
 
 class AST {

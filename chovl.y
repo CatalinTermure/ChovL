@@ -94,6 +94,8 @@ block_node : OPEN_BRACK expression_list CLOSED_BRACK { $$ = new chovl::BlockNode
            ;
 
 statement : expression SEPARATOR { $$ = $1; }
+          | type_identifier IDENTIFIER SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, nullptr); }
+          | type_identifier IDENTIFIER OP_ASSIGN expression SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, $4); }
           ;
 
 statement_list : statement { $$ = new chovl::ASTListNode(); $$->push_back($1); }

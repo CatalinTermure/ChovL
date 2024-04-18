@@ -175,7 +175,9 @@ BlockNode::BlockNode(ASTAggregateNode* body, bool is_void)
     : body_(body), is_void_(is_void) {}
 
 llvm::Value* BlockNode::codegen(Context& context) {
+  context.symbol_table->AddScope();
   std::vector<llvm::Value*> vals = body_->codegen(context);
+  context.symbol_table->RemoveScope();
 
   if (is_void_ || vals.empty()) {
     return nullptr;
@@ -185,6 +187,31 @@ llvm::Value* BlockNode::codegen(Context& context) {
 
 llvm::Value* CharNode::codegen(Context& context) {
   return context.llvm_builder->getInt8(value_);
+}
+
+VariableDeclarationNode::VariableDeclarationNode(TypeNode* type,
+                                                 const char* name,
+                                                 ASTNode* value)
+    : type_(type), name_(name), value_(value) {}
+
+llvm::Value* VariableDeclarationNode::codegen(Context& context) {
+  llvm::Type* llvm_type = type_->llvm_type(context);
+
+  llvm::Function* curr_func =
+      context.llvm_builder->GetInsertBlock()->getParent();
+  llvm::IRBuilder<> tmp_builder(&curr_func->getEntryBlock(),
+                                curr_func->getEntryBlock().begin());
+
+  llvm::AllocaInst* alloca =
+      tmp_builder.CreateAlloca(llvm_type, nullptr, name_);
+
+  llvm::Value* assigned_val = nullptr;
+  if (value_ != nullptr) {
+    llvm::Value* assigned_val = value_->codegen(context);
+    context.llvm_builder->CreateStore(assigned_val, alloca);
+  }
+  context.symbol_table->AddSymbol(name_, {assigned_val, alloca, type_->get()});
+  return nullptr;
 }
 
 }  // namespace chovl

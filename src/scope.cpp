@@ -16,14 +16,16 @@ llvm::Type* Type::llvm_type(Context& context) const {
 }
 
 SymbolicValue::SymbolicValue(SymbolicValue&& other)
-    : value_(other.value_), type_(other.type_) {
+    : value_(other.value_), type_(other.type_), alloca_(other.alloca_) {
   other.value_ = nullptr;
 }
 
 SymbolicValue& SymbolicValue::operator=(SymbolicValue&& other) {
   value_ = other.value_;
   type_ = other.type_;
+  alloca_ = other.alloca_;
   other.value_ = nullptr;
+  other.alloca_ = nullptr;
   return *this;
 }
 

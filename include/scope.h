@@ -32,7 +32,8 @@ struct Type {
 
 class SymbolicValue {
  public:
-  SymbolicValue(llvm::Value *value, Type type) : value_(value), type_(type) {}
+  SymbolicValue(llvm::Value *value, llvm::AllocaInst *alloca, Type type)
+      : value_(value), alloca_(alloca), type_(type) {}
 
   SymbolicValue(const SymbolicValue &) = delete;
   SymbolicValue &operator=(const SymbolicValue &) = delete;
@@ -47,6 +48,7 @@ class SymbolicValue {
 
  private:
   llvm::Value *value_;
+  llvm::AllocaInst *alloca_;
   Type type_;
 };
 
