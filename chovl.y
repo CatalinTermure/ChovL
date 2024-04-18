@@ -113,11 +113,11 @@ binary_expression : primary_expression operator primary_expression { $$ = new ch
                   ;
 
 primary_expression : constant { $$ = $1; }
-                 | constant KW_AS type_identifier { $$ = new chovl::CastOpNode($3, $1); }
-                 | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
-                 | function_call { $$ = $1; }
-                 | block_node { $$ = $1; }
-                 ;
+                   | constant KW_AS type_identifier { $$ = new chovl::CastOpNode($3, $1); }
+                   | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
+                   | function_call { $$ = $1; }
+                   | block_node { $$ = $1; }
+                   ;
 
 function_call : IDENTIFIER OPEN_PAREN actual_param_list CLOSED_PAREN { $$ = new chovl::FunctionCallNode($1, $3); }
               | IDENTIFIER OPEN_PAREN CLOSED_PAREN { $$ = new chovl::FunctionCallNode($1, new chovl::ASTListNode()); }
