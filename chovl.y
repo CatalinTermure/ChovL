@@ -29,8 +29,10 @@ void yyerror(const char *s) {
     char chr;
 }
 
-%type <node> binary_expression constant function_definition function_body function_prototype function_declaration primary_expression expression block_node function_call
-%type <aggregate> function_definition_list actual_param_list expression_list
+%type <node> binary_expression constant function_definition function_body function_prototype
+%type <node> function_declaration primary_expression expression block_node function_call statement
+
+%type <aggregate> function_definition_list actual_param_list expression_list statement_list
 %type <param> parameter
 %type <params> formal_param_list non_void_formal_param_list
 %type <type_id> type_identifier
@@ -87,12 +89,19 @@ function_body : OP_ASSIGN expression SEPARATOR { $$ = $2; }
               ;
 
 block_node : OPEN_BRACK expression_list CLOSED_BRACK { $$ = new chovl::BlockNode($2); }
-           | OPEN_BRACK expression_list SEPARATOR CLOSED_BRACK { $$ = new chovl::BlockNode($2, true); }
+           | OPEN_BRACK statement_list CLOSED_BRACK { $$ = new chovl::BlockNode($2, true); }
            | OPEN_BRACK CLOSED_BRACK { $$ = new chovl::BlockNode(new chovl::ASTListNode()); }
            ;
 
+statement : expression SEPARATOR { $$ = $1; }
+          ;
+
+statement_list : statement { $$ = new chovl::ASTListNode(); $$->push_back($1); }
+               | statement_list statement { $1->push_back($2); $$ = $1; }
+               ;
+
 expression_list : expression { $$ = new chovl::ASTListNode(); $$->push_back($1); }
-                | expression_list SEPARATOR expression { $1->push_back($3); $$ = $1; }
+                | statement_list expression { $1->push_back($2); $$ = $1; }
                 ;
 
 expression : binary_expression { $$ = $1; }
