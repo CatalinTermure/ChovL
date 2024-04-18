@@ -28,7 +28,7 @@ add_library(parser STATIC
   ${BISON_chovl_yacc_OUTPUTS}
   src/ast.cpp
   src/scope.cpp
-  src/value.cpp
+  src/context.cpp
 )
 target_link_libraries(parser ${llvm_libs})
 

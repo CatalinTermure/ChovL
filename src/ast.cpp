@@ -37,11 +37,6 @@ llvm::Value* CastValue(Context& context, llvm::Value* src, llvm::Type* src_type,
 }
 }  // namespace
 
-Context::Context() {
-  llvm_builder = std::make_unique<llvm::IRBuilder<>>(llvm_context);
-  llvm_module = std::make_unique<llvm::Module>("chovl", llvm_context);
-}
-
 AST::AST(ASTAggregateNode* root) { root_ = root; }
 
 void AST::codegen() {
