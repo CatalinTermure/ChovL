@@ -33,6 +33,8 @@ enum class Operator : uint8_t {
   kGreaterThan,
   kLessEq,
   kGreaterEq,
+  kAnd,
+  kOr
 };
 
 class I32Node : public ASTNode {

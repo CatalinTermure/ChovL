@@ -101,6 +101,10 @@ llvm::Value* BinaryExprNode::codegen(Context& context) {
         return context.llvm_builder->CreateFCmpUGE(lhs, rhs, "cmptmp");
       }
       return context.llvm_builder->CreateICmpSGE(lhs, rhs, "cmptmp");
+    case Operator::kAnd:
+      return context.llvm_builder->CreateAnd(lhs, rhs, "andtmp");
+    case Operator::kOr:
+      return context.llvm_builder->CreateOr(lhs, rhs, "ortmp");
     default:
       return nullptr;
   }

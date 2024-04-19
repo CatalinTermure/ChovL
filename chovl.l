@@ -43,6 +43,8 @@ WHITESPACE    [ \t\n]
 "<="                                    { yylval.op = chovl::Operator::kLessEq; return OP_LEQ; }
 ">"                                     { yylval.op = chovl::Operator::kGreaterThan; return OP_GT; }
 ">="                                    { yylval.op = chovl::Operator::kGreaterEq; return OP_GEQ; }
+"||"                                    { yylval.op = chovl::Operator::kOr; return OP_OR; }
+"&&"                                    { yylval.op = chovl::Operator::kAnd; return OP_AND; }
 .                                       ;
 
 %%

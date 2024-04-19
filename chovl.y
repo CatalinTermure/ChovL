@@ -31,13 +31,12 @@ void yyerror(const char *s) {
 
 %type <node> binary_expression constant function_definition function_body function_prototype
 %type <node> function_declaration primary_expression expression block_expression function_call statement
-%type <node> block block_statement
-
+%type <node> block block_statement conditional_expression binary_conditional_expression
 %type <aggregate> function_definition_list actual_param_list expression_list statement_list
 %type <param> parameter
 %type <params> formal_param_list non_void_formal_param_list
 %type <type_id> type_identifier
-%type <op> operator
+%type <op> operator conditional_operator conditional_composition_operator
 
 %token OPEN_BRACK CLOSED_BRACK
 %token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR COMMA
@@ -47,6 +46,7 @@ void yyerror(const char *s) {
 %token <i32> I32
 %token <f32> F32
 %token <chr> CHAR
+%left <op> OP_OR OP_AND
 %left <op> OP_LT OP_LEQ OP_GT OP_GEQ
 %left <op> OP_ADD OP_SUB
 
@@ -119,6 +119,8 @@ expression_list : expression { $$ = new chovl::ASTListNode(); $$->push_back($1);
 
 expression : binary_expression { $$ = $1; }
            | primary_expression { $$ = $1; }
+           | conditional_expression { $$ = $1; }
+           | binary_conditional_expression { $$ = $1; }
            ;
 
 binary_expression : primary_expression operator primary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
@@ -133,6 +135,13 @@ primary_expression : constant { $$ = $1; }
                    | IDENTIFIER { $$ = new chovl::VariableNode($1); }
                    | KW_IF primary_expression KW_THEN primary_expression KW_ELSE primary_expression { $$ = new chovl::CondExprNode($2, $4, $6); }
                    ;
+
+binary_conditional_expression : conditional_expression conditional_composition_operator conditional_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+                              | binary_conditional_expression conditional_composition_operator conditional_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+                              ;
+
+conditional_expression : primary_expression conditional_operator primary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+                       ;
 
 function_call : IDENTIFIER OPEN_PAREN actual_param_list CLOSED_PAREN { $$ = new chovl::FunctionCallNode($1, $3); }
               | IDENTIFIER OPEN_PAREN CLOSED_PAREN { $$ = new chovl::FunctionCallNode($1, new chovl::ASTListNode()); }
@@ -149,10 +158,16 @@ constant : F32 { $$ = new chovl::F32Node($1); }
 
 operator : OP_ADD { $$ = $1; }
          | OP_SUB { $$ = $1; }
-         | OP_LT  { $$ = $1; }
-         | OP_GT  { $$ = $1; }
-         | OP_LEQ { $$ = $1; }
-         | OP_GEQ { $$ = $1; }
          ;
+
+conditional_operator : OP_LT  { $$ = $1; }
+                     | OP_GT  { $$ = $1; }
+                     | OP_LEQ { $$ = $1; }
+                     | OP_GEQ { $$ = $1; }
+                     ;
+
+conditional_composition_operator : OP_OR  { $$ = $1; }
+                                 | OP_AND { $$ = $1; }
+                                 ;
 
 %%
