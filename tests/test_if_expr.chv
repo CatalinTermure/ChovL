@@ -1,0 +1,18 @@
+fn i32 putchar(i32 ch);
+
+fn i32 main() {
+  i32 x = 5;
+  i32 y = x + 3;
+
+  
+  if (y > x) then {
+    putchar('O');
+    putchar('K');
+    0
+  } else {
+    putchar('B');
+    putchar('A');
+    putchar('D');
+    1
+  }
+}

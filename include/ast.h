@@ -29,6 +29,10 @@ class ASTAggregateNode {
 enum class Operator : uint8_t {
   kAdd,
   kSub,
+  kLessThan,
+  kGreaterThan,
+  kLessEq,
+  kGreaterEq,
 };
 
 class I32Node : public ASTNode {
@@ -227,6 +231,30 @@ class VariableNode : public ASTNode {
 
  private:
   std::string name_;
+};
+
+class CondExprNode : public ASTNode {
+ public:
+  CondExprNode(ASTNode *cond, ASTNode *then, ASTNode *els);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::unique_ptr<ASTNode> cond_;
+  std::unique_ptr<ASTNode> then_;
+  std::unique_ptr<ASTNode> else_;
+};
+
+class CondStatementNode : public ASTNode {
+ public:
+  CondStatementNode(ASTNode *cond, ASTNode *then, ASTNode *els);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::unique_ptr<ASTNode> cond_;
+  std::unique_ptr<ASTNode> then_;
+  std::unique_ptr<ASTNode> else_;
 };
 
 class AST {

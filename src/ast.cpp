@@ -81,6 +81,26 @@ llvm::Value* BinaryExprNode::codegen(Context& context) {
         return context.llvm_builder->CreateFSub(lhs, rhs, "addtmp");
       }
       return context.llvm_builder->CreateSub(lhs, rhs, "addtmp");
+    case Operator::kLessThan:
+      if (lhs->getType()->isFloatingPointTy()) {
+        return context.llvm_builder->CreateFCmpULT(lhs, rhs, "cmptmp");
+      }
+      return context.llvm_builder->CreateICmpSLT(lhs, rhs, "cmptmp");
+    case Operator::kGreaterThan:
+      if (lhs->getType()->isFloatingPointTy()) {
+        return context.llvm_builder->CreateFCmpUGT(lhs, rhs, "cmptmp");
+      }
+      return context.llvm_builder->CreateICmpSGT(lhs, rhs, "cmptmp");
+    case Operator::kLessEq:
+      if (lhs->getType()->isFloatingPointTy()) {
+        return context.llvm_builder->CreateFCmpULE(lhs, rhs, "cmptmp");
+      }
+      return context.llvm_builder->CreateICmpSLE(lhs, rhs, "cmptmp");
+    case Operator::kGreaterEq:
+      if (lhs->getType()->isFloatingPointTy()) {
+        return context.llvm_builder->CreateFCmpUGE(lhs, rhs, "cmptmp");
+      }
+      return context.llvm_builder->CreateICmpSGE(lhs, rhs, "cmptmp");
     default:
       return nullptr;
   }
@@ -230,4 +250,86 @@ llvm::Value* VariableAssignmentNode::codegen(Context& context) {
   llvm::Value* val = value_->codegen(context);
   return context.llvm_builder->CreateStore(val, sym.llvm_alloca());
 }
+
+CondExprNode::CondExprNode(ASTNode* cond, ASTNode* then, ASTNode* els)
+    : cond_(cond), then_(then), else_(els) {}
+
+llvm::Value* CondExprNode::codegen(Context& context) {
+  Function* curr_func = context.llvm_builder->GetInsertBlock()->getParent();
+
+  BasicBlock* then_block =
+      BasicBlock::Create(context.llvm_context, "then", curr_func);
+  BasicBlock* else_block = BasicBlock::Create(context.llvm_context, "else");
+  BasicBlock* merge_block = BasicBlock::Create(context.llvm_context, "ifcont");
+
+  llvm::Value* cond_val = cond_->codegen(context);
+  context.llvm_builder->CreateCondBr(cond_val, then_block, else_block);
+
+  context.llvm_builder->SetInsertPoint(then_block);
+  llvm::Value* then_val = then_->codegen(context);
+  if (!then_val) {
+    return nullptr;
+  }
+
+  context.llvm_builder->CreateBr(merge_block);
+  then_block = context.llvm_builder->GetInsertBlock();
+
+  curr_func->insert(curr_func->end(), else_block);
+  context.llvm_builder->SetInsertPoint(else_block);
+
+  llvm::Value* else_val = nullptr;
+  if (else_) {
+    else_val = else_->codegen(context);
+    context.llvm_builder->CreateBr(merge_block);
+    else_block = context.llvm_builder->GetInsertBlock();
+  }
+
+  curr_func->insert(curr_func->end(), merge_block);
+  context.llvm_builder->SetInsertPoint(merge_block);
+
+  llvm::PHINode* phi_node =
+      context.llvm_builder->CreatePHI(then_val->getType(), 2, "iftmp");
+
+  phi_node->addIncoming(then_val, then_block);
+  if (else_) {
+    phi_node->addIncoming(else_val, else_block);
+  }
+
+  return phi_node;
+}
+
+CondStatementNode::CondStatementNode(ASTNode* cond, ASTNode* then, ASTNode* els)
+    : cond_(cond), then_(then), else_(els) {}
+
+llvm::Value* CondStatementNode::codegen(Context& context) {
+  Function* curr_func = context.llvm_builder->GetInsertBlock()->getParent();
+
+  BasicBlock* then_block =
+      BasicBlock::Create(context.llvm_context, "then", curr_func);
+  BasicBlock* else_block = BasicBlock::Create(context.llvm_context, "else");
+  BasicBlock* merge_block = BasicBlock::Create(context.llvm_context, "ifcont");
+
+  llvm::Value* cond_val = cond_->codegen(context);
+  context.llvm_builder->CreateCondBr(cond_val, then_block, else_block);
+
+  context.llvm_builder->SetInsertPoint(then_block);
+  then_->codegen(context);
+  context.llvm_builder->CreateBr(merge_block);
+  then_block = context.llvm_builder->GetInsertBlock();
+
+  curr_func->insert(curr_func->end(), else_block);
+  context.llvm_builder->SetInsertPoint(else_block);
+
+  if (else_) {
+    else_->codegen(context);
+    context.llvm_builder->CreateBr(merge_block);
+    else_block = context.llvm_builder->GetInsertBlock();
+  }
+
+  curr_func->insert(curr_func->end(), merge_block);
+  context.llvm_builder->SetInsertPoint(merge_block);
+
+  return nullptr;
+}
+
 }  // namespace chovl

@@ -30,7 +30,8 @@ void yyerror(const char *s) {
 }
 
 %type <node> binary_expression constant function_definition function_body function_prototype
-%type <node> function_declaration primary_expression expression block_node function_call statement
+%type <node> function_declaration primary_expression expression block_expression function_call statement
+%type <node> block block_statement
 
 %type <aggregate> function_definition_list actual_param_list expression_list statement_list
 %type <param> parameter
@@ -40,12 +41,13 @@ void yyerror(const char *s) {
 
 %token OPEN_BRACK CLOSED_BRACK
 %token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR COMMA
-%token KW_FN KW_I32 KW_F32 KW_AS KW_CHAR
+%token KW_FN KW_I32 KW_F32 KW_AS KW_CHAR KW_IF KW_THEN KW_ELSE
 %token OP_ASSIGN
 %token <str> IDENTIFIER
 %token <i32> I32
 %token <f32> F32
 %token <chr> CHAR
+%left <op> OP_LT OP_LEQ OP_GT OP_GEQ
 %left <op> OP_ADD OP_SUB
 
 %%
@@ -85,18 +87,26 @@ type_identifier : KW_I32 { $$ = new chovl::TypeNode(chovl::PrimitiveType::kI32);
                 ;
 
 function_body : OP_ASSIGN expression SEPARATOR { $$ = $2; }
-              | block_node { $$ = $1; }
+              | block { $$ = $1; }
               ;
 
-block_node : OPEN_BRACK expression_list CLOSED_BRACK { $$ = new chovl::BlockNode($2); }
-           | OPEN_BRACK statement_list CLOSED_BRACK { $$ = new chovl::BlockNode($2, true); }
-           | OPEN_BRACK CLOSED_BRACK { $$ = new chovl::BlockNode(new chovl::ASTListNode()); }
-           ;
+block : block_expression { $$ = $1; }
+      | block_statement { $$ = $1; }
+      ;
+
+block_expression : OPEN_BRACK expression_list CLOSED_BRACK { $$ = new chovl::BlockNode($2); }
+                 ;
+
+block_statement : OPEN_BRACK statement_list CLOSED_BRACK { $$ = new chovl::BlockNode($2, true); }
+                | OPEN_BRACK CLOSED_BRACK { $$ = new chovl::BlockNode(new chovl::ASTListNode()); }
+                ;
 
 statement : expression SEPARATOR { $$ = $1; }
           | type_identifier IDENTIFIER SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, nullptr); }
           | type_identifier IDENTIFIER OP_ASSIGN expression SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, $4); }
           | IDENTIFIER OP_ASSIGN expression SEPARATOR { $$ = new chovl::VariableAssignmentNode($1, $3); }
+          | block_statement { $$ = $1; }
+          | KW_IF primary_expression KW_THEN block_statement KW_ELSE block_statement { $$ = new chovl::CondStatementNode($2, $4, $6); }
           ;
 
 statement_list : statement { $$ = new chovl::ASTListNode(); $$->push_back($1); }
@@ -119,8 +129,9 @@ primary_expression : constant { $$ = $1; }
                    | constant KW_AS type_identifier { $$ = new chovl::CastOpNode($3, $1); }
                    | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
                    | function_call { $$ = $1; }
-                   | block_node { $$ = $1; }
+                   | block_expression { $$ = $1; }
                    | IDENTIFIER { $$ = new chovl::VariableNode($1); }
+                   | KW_IF primary_expression KW_THEN primary_expression KW_ELSE primary_expression { $$ = new chovl::CondExprNode($2, $4, $6); }
                    ;
 
 function_call : IDENTIFIER OPEN_PAREN actual_param_list CLOSED_PAREN { $$ = new chovl::FunctionCallNode($1, $3); }
@@ -138,6 +149,10 @@ constant : F32 { $$ = new chovl::F32Node($1); }
 
 operator : OP_ADD { $$ = $1; }
          | OP_SUB { $$ = $1; }
+         | OP_LT  { $$ = $1; }
+         | OP_GT  { $$ = $1; }
+         | OP_LEQ { $$ = $1; }
+         | OP_GEQ { $$ = $1; }
          ;
 
 %%
