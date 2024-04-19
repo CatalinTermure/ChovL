@@ -29,6 +29,8 @@ class ASTAggregateNode {
 enum class Operator : uint8_t {
   kAdd,
   kSub,
+  kEq,
+  kNotEq,
   kLessThan,
   kGreaterThan,
   kLessEq,

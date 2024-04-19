@@ -47,7 +47,7 @@ void yyerror(const char *s) {
 %token <f32> F32
 %token <chr> CHAR
 %left <op> OP_OR OP_AND
-%left <op> OP_LT OP_LEQ OP_GT OP_GEQ
+%left <op> OP_LT OP_LEQ OP_GT OP_GEQ OP_EQ OP_NEQ
 %left <op> OP_ADD OP_SUB
 
 %%
@@ -164,6 +164,8 @@ conditional_operator : OP_LT  { $$ = $1; }
                      | OP_GT  { $$ = $1; }
                      | OP_LEQ { $$ = $1; }
                      | OP_GEQ { $$ = $1; }
+                     | OP_EQ  { $$ = $1; }
+                     | OP_NEQ { $$ = $1; }
                      ;
 
 conditional_composition_operator : OP_OR  { $$ = $1; }

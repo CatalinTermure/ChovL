@@ -1,0 +1,22 @@
+define i32 @main() {
+entry:
+  %z = alloca i32, align 4
+  %y = alloca i32, align 4
+  %x = alloca i32, align 4
+  store i32 5, ptr %x, align 4
+  store i32 17, ptr %y, align 4
+  store i32 10, ptr %z, align 4
+  %x1 = load i32, ptr %x, align 4
+  %cmptmp = icmp eq i32 %x1, 5
+  br i1 %cmptmp, label %then, label %else
+
+then:                                             ; preds = %entry
+  br label %ifcont
+
+else:                                             ; preds = %entry
+  br label %ifcont
+
+ifcont:                                           ; preds = %else, %then
+  %iftmp = phi i32 [ 0, %then ], [ 1, %else ]
+  ret i32 %iftmp
+}

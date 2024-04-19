@@ -81,6 +81,16 @@ llvm::Value* BinaryExprNode::codegen(Context& context) {
         return context.llvm_builder->CreateFSub(lhs, rhs, "addtmp");
       }
       return context.llvm_builder->CreateSub(lhs, rhs, "addtmp");
+    case Operator::kEq:
+      if (lhs->getType()->isFloatingPointTy()) {
+        return context.llvm_builder->CreateFCmpUEQ(lhs, rhs, "cmptmp");
+      }
+      return context.llvm_builder->CreateICmpEQ(lhs, rhs, "cmptmp");
+    case Operator::kNotEq:
+      if (lhs->getType()->isFloatingPointTy()) {
+        return context.llvm_builder->CreateFCmpUNE(lhs, rhs, "cmptmp");
+      }
+      return context.llvm_builder->CreateICmpNE(lhs, rhs, "cmptmp");
     case Operator::kLessThan:
       if (lhs->getType()->isFloatingPointTy()) {
         return context.llvm_builder->CreateFCmpULT(lhs, rhs, "cmptmp");
