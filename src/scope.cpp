@@ -34,11 +34,23 @@ void SymbolTable::AddSymbol(const std::string& name, SymbolicValue value) {
 }
 
 SymbolicValue& SymbolTable::GetSymbol(const std::string& name) {
-  return symbols_.back().at(name);
+  for (auto it = symbols_.rbegin(); it != symbols_.rend(); ++it) {
+    auto symbol = it->find(name);
+    if (symbol != it->end()) {
+      return symbol->second;
+    }
+  }
+  throw std::runtime_error("Symbol not found");
 }
 
 const SymbolicValue& SymbolTable::GetSymbol(const std::string& name) const {
-  return symbols_.back().at(name);
+  for (auto it = symbols_.rbegin(); it != symbols_.rend(); ++it) {
+    auto symbol = it->find(name);
+    if (symbol != it->end()) {
+      return symbol->second;
+    }
+  }
+  throw std::runtime_error("Symbol not found");
 }
 
 void SymbolTable::AddScope() { symbols_.emplace_back(); }
