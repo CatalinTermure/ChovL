@@ -1,6 +1,20 @@
 #include "scope.h"
 
 namespace chovl {
+Type::Type(llvm::Type* type) {
+  if (type->isIntegerTy(32)) {
+    kind_ = PrimitiveType::kI32;
+  } else if (type->isFloatTy()) {
+    kind_ = PrimitiveType::kF32;
+  } else if (type->isIntegerTy(8)) {
+    kind_ = PrimitiveType::kChar;
+  } else if (type->isVoidTy()) {
+    kind_ = PrimitiveType::kNone;
+  } else {
+    throw std::runtime_error("Unsupported type");
+  }
+}
+
 llvm::Type* Type::llvm_type(Context& context) const {
   switch (kind_) {
     case PrimitiveType::kI32:

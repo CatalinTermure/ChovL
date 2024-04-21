@@ -17,6 +17,8 @@ struct Type {
   // Intentionally not explicit to allow implicit conversion from PrimitiveType.
   Type(PrimitiveType kind) : kind_(kind) {}
 
+  explicit Type(llvm::Type *type);
+
   Type(const Type &) = default;
   Type &operator=(const Type &) = default;
 

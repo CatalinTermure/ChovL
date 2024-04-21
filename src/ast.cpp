@@ -172,7 +172,20 @@ llvm::Value* FunctionDefNode::codegen(Context& context) {
   BasicBlock* block = BasicBlock::Create(context.llvm_context, "entry", func);
   context.llvm_builder->SetInsertPoint(block);
 
+  context.symbol_table->AddScope();
+  // We need to create alloca for each argument to store them in the symbol
+  // table. This gets optimized away by LLVM, so it's fine.
+  for (auto& arg : func->args()) {
+    llvm::AllocaInst* alloca = context.llvm_builder->CreateAlloca(
+        arg.getType(), nullptr, arg.getName());
+    context.llvm_builder->CreateStore(&arg, alloca);
+    context.symbol_table->AddSymbol(std::string(arg.getName()),
+                                    {&arg, alloca, Type(arg.getType())});
+  }
+
   context.llvm_builder->CreateRet(body_->codegen(context));
+
+  context.symbol_table->RemoveScope();
 
   llvm::verifyFunction(*func);
 

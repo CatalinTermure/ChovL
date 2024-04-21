@@ -1,0 +1,5 @@
+fn i32 sum(i32 a, i32 b) = a + b;
+
+fn i32 main() {
+  sum(1, 1)
+}

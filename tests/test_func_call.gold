@@ -5,6 +5,10 @@ entry:
 
 define i32 @bar(i32 %a, i32 %b) {
 entry:
+  %a1 = alloca i32, align 4
+  store i32 %a, ptr %a1, align 4
+  %b2 = alloca i32, align 4
+  store i32 %b, ptr %b2, align 4
   ret i32 10
 }
 

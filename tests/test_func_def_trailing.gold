@@ -1,14 +1,26 @@
 define i32 @foo(i32 %a) {
 entry:
+  %a1 = alloca i32, align 4
+  store i32 %a, ptr %a1, align 4
   ret i32 5
 }
 
 define i32 @bar(i32 %a, float %b) {
 entry:
+  %a1 = alloca i32, align 4
+  store i32 %a, ptr %a1, align 4
+  %b2 = alloca float, align 4
+  store float %b, ptr %b2, align 4
   ret i32 18
 }
 
 define float @baz(float %a, i32 %b, float %c) {
 entry:
+  %a1 = alloca float, align 4
+  store float %a, ptr %a1, align 4
+  %b2 = alloca i32, align 4
+  store i32 %b, ptr %b2, align 4
+  %c3 = alloca float, align 4
+  store float %c, ptr %c3, align 4
   ret float 0x4014CCCCC0000000
 }
