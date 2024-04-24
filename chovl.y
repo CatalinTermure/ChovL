@@ -10,6 +10,8 @@ void yyerror(const char *s) {
 
 %}
 
+%define parse.error verbose
+
 %code requires {
 #include "ast.h"
 }

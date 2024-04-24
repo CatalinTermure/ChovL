@@ -70,6 +70,15 @@ llvm::Value* BinaryExprNode::codegen(Context& context) {
   llvm::Value* lhs = lhs_->codegen(context);
   llvm::Value* rhs = rhs_->codegen(context);
 
+  if (lhs->getType() != rhs->getType()) {
+    std::string error_str = "BinaryExprNode: lhs and rhs types do not match: ";
+    llvm::raw_string_ostream rso(error_str);
+    lhs->getType()->print(rso);
+    rso << " vs ";
+    rhs->getType()->print(rso);
+    throw std::runtime_error(rso.str());
+  }
+
   switch (op_) {
     case Operator::kAdd:
       if (lhs->getType()->isFloatingPointTy()) {
