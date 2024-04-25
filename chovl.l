@@ -47,6 +47,7 @@ WHITESPACE    [ \t\n]
 "!="                                    { yylval.op = chovl::Operator::kNotEq; return OP_NEQ; }
 "||"                                    { yylval.op = chovl::Operator::kOr; return OP_OR; }
 "&&"                                    { yylval.op = chovl::Operator::kAnd; return OP_AND; }
+\/\/[^\n]*                              ;
 .                                       ;
 
 %%
