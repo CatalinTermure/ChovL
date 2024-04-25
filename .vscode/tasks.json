@@ -6,7 +6,7 @@
     {
       "label": "Translate ChovL to LLVM IR",
       "type": "shell",
-      "command": "${workspaceFolder}/build/chovl < ${file} > ${fileDirname}/${fileBasenameNoExtension}.ll",
+      "command": "${workspaceFolder}/build/chovl ${file} -o ${fileDirname}/${fileBasenameNoExtension}.ll",
     },
     {
       "label": "Assemble LLVM IR to object file",

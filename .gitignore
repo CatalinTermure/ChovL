@@ -8,3 +8,4 @@ tests/*.s
 design.txt
 .vscode/*
 !.vscode/tasks.json
+example/
