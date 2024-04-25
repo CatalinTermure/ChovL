@@ -70,65 +70,7 @@ llvm::Value* BinaryExprNode::codegen(Context& context) {
   llvm::Value* lhs = lhs_->codegen(context);
   llvm::Value* rhs = rhs_->codegen(context);
 
-  if (lhs->getType() != rhs->getType()) {
-    std::string error_str = "BinaryExprNode: lhs and rhs types do not match: ";
-    llvm::raw_string_ostream rso(error_str);
-    lhs->getType()->print(rso);
-    rso << " vs ";
-    rhs->getType()->print(rso);
-    throw std::runtime_error(rso.str());
-  }
-
-  switch (op_) {
-    case Operator::kAdd:
-      if (lhs->getType()->isFloatingPointTy()) {
-        return context.llvm_builder->CreateFAdd(lhs, rhs, "addtmp");
-      }
-      return context.llvm_builder->CreateAdd(lhs, rhs, "addtmp");
-    case Operator::kSub:
-      if (lhs->getType()->isFloatingPointTy()) {
-        return context.llvm_builder->CreateFSub(lhs, rhs, "addtmp");
-      }
-      return context.llvm_builder->CreateSub(lhs, rhs, "addtmp");
-    case Operator::kEq:
-      if (lhs->getType()->isFloatingPointTy()) {
-        return context.llvm_builder->CreateFCmpUEQ(lhs, rhs, "cmptmp");
-      }
-      return context.llvm_builder->CreateICmpEQ(lhs, rhs, "cmptmp");
-    case Operator::kNotEq:
-      if (lhs->getType()->isFloatingPointTy()) {
-        return context.llvm_builder->CreateFCmpUNE(lhs, rhs, "cmptmp");
-      }
-      return context.llvm_builder->CreateICmpNE(lhs, rhs, "cmptmp");
-    case Operator::kLessThan:
-      if (lhs->getType()->isFloatingPointTy()) {
-        return context.llvm_builder->CreateFCmpULT(lhs, rhs, "cmptmp");
-      }
-      return context.llvm_builder->CreateICmpSLT(lhs, rhs, "cmptmp");
-    case Operator::kGreaterThan:
-      if (lhs->getType()->isFloatingPointTy()) {
-        return context.llvm_builder->CreateFCmpUGT(lhs, rhs, "cmptmp");
-      }
-      return context.llvm_builder->CreateICmpSGT(lhs, rhs, "cmptmp");
-    case Operator::kLessEq:
-      if (lhs->getType()->isFloatingPointTy()) {
-        return context.llvm_builder->CreateFCmpULE(lhs, rhs, "cmptmp");
-      }
-      return context.llvm_builder->CreateICmpSLE(lhs, rhs, "cmptmp");
-    case Operator::kGreaterEq:
-      if (lhs->getType()->isFloatingPointTy()) {
-        return context.llvm_builder->CreateFCmpUGE(lhs, rhs, "cmptmp");
-      }
-      return context.llvm_builder->CreateICmpSGE(lhs, rhs, "cmptmp");
-    case Operator::kAnd:
-      return context.llvm_builder->CreateAnd(lhs, rhs, "andtmp");
-    case Operator::kOr:
-      return context.llvm_builder->CreateOr(lhs, rhs, "ortmp");
-    default:
-      return nullptr;
-  }
-
-  return nullptr;
+  return CreateBinaryOperation(context.llvm_builder.get(), op_, lhs, rhs);
 }
 
 TypeNode::TypeNode(Type type) : type_(type) {}

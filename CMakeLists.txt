@@ -29,6 +29,7 @@ add_library(parser STATIC
   src/ast.cpp
   src/scope.cpp
   src/context.cpp
+  src/operators.cpp
 )
 target_link_libraries(parser ${llvm_libs})
 

@@ -9,10 +9,13 @@
 #include <unordered_map>
 
 #include "context.h"
+#include "operators.h"
 #include "scope.h"
 
 namespace chovl {
 
+// This class is never transmitted via a non-owning pointer, so all raw pointers
+// to a Node are owning.
 class ASTNode {
  public:
   virtual llvm::Value *codegen(Context &context) = 0;
@@ -24,19 +27,6 @@ class ASTAggregateNode {
   virtual std::vector<llvm::Value *> codegen(Context &context) = 0;
   virtual void push_back(ASTNode *node) = 0;
   virtual ~ASTAggregateNode() = default;
-};
-
-enum class Operator : uint8_t {
-  kAdd,
-  kSub,
-  kEq,
-  kNotEq,
-  kLessThan,
-  kGreaterThan,
-  kLessEq,
-  kGreaterEq,
-  kAnd,
-  kOr
 };
 
 class I32Node : public ASTNode {
