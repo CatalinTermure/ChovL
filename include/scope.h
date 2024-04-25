@@ -1,7 +1,7 @@
 #pragma once
 
 #include <llvm/IR/Type.h>
-#include <llvm/IR/ValueHandle.h>
+#include <llvm/IR/Value.h>
 
 #include <string>
 #include <unordered_map>
