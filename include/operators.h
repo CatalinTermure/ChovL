@@ -9,6 +9,9 @@ namespace chovl {
 enum class Operator : uint8_t {
   kAdd,
   kSub,
+  kDiv,
+  kMul,
+  kMod,
   kEq,
   kNotEq,
   kLessThan,

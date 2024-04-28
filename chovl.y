@@ -31,14 +31,15 @@ void yyerror(const char *s) {
     char chr;
 }
 
-%type <node> binary_expression constant function_definition function_body function_prototype
+%type <node> binary_expression additive_expression multiplicative_expression
+%type <node> constant function_definition function_body function_prototype
 %type <node> function_declaration primary_expression expression block_expression function_call statement
 %type <node> block block_statement conditional_expression binary_conditional_expression
 %type <aggregate> function_definition_list actual_param_list expression_list statement_list
 %type <param> parameter
 %type <params> formal_param_list non_void_formal_param_list
 %type <type_id> type_identifier
-%type <op> operator conditional_operator conditional_composition_operator
+%type <op> additive_operator multiplicative_operator conditional_operator conditional_composition_operator
 
 %token OPEN_BRACK CLOSED_BRACK
 %token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR COMMA
@@ -51,6 +52,7 @@ void yyerror(const char *s) {
 %left <op> OP_OR OP_AND
 %left <op> OP_LT OP_LEQ OP_GT OP_GEQ OP_EQ OP_NEQ
 %left <op> OP_ADD OP_SUB
+%left <op> OP_DIV OP_MUL OP_MOD
 
 %%
 
@@ -120,13 +122,19 @@ expression_list : expression { $$ = new chovl::ASTListNode(); $$->push_back($1);
                 ;
 
 expression : binary_expression { $$ = $1; }
-           | primary_expression { $$ = $1; }
            | conditional_expression { $$ = $1; }
            | binary_conditional_expression { $$ = $1; }
            ;
 
-binary_expression : primary_expression operator primary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
-                  | binary_expression operator primary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+multiplicative_expression : primary_expression { $$ = $1; }
+                          | primary_expression multiplicative_operator primary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+                          ;
+
+additive_expression : multiplicative_expression { $$ = $1; }
+                    | additive_expression additive_operator multiplicative_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+                    ;
+
+binary_expression : additive_expression { $$ = $1; }
                   ;
 
 primary_expression : constant { $$ = $1; }
@@ -158,9 +166,14 @@ constant : F32 { $$ = new chovl::F32Node($1); }
          | CHAR { $$ = new chovl::CharNode($1); }
          ;
 
-operator : OP_ADD { $$ = $1; }
-         | OP_SUB { $$ = $1; }
-         ;
+additive_operator : OP_ADD { $$ = $1; }
+                  | OP_SUB { $$ = $1; }
+                  ;
+
+multiplicative_operator : OP_DIV { $$ = $1; }
+                        | OP_MUL { $$ = $1; }
+                        | OP_MOD { $$ = $1; }
+                        ;
 
 conditional_operator : OP_LT  { $$ = $1; }
                      | OP_GT  { $$ = $1; }

@@ -24,6 +24,21 @@ llvm::Value* CreateBinaryOperation(llvm::IRBuilder<>* builder, Operator op,
         return builder->CreateFSub(lhs, rhs, "addtmp");
       }
       return builder->CreateSub(lhs, rhs, "addtmp");
+    case Operator::kDiv:
+      if (lhs->getType()->isFloatingPointTy()) {
+        return builder->CreateFDiv(lhs, rhs, "divtmp");
+      }
+      return builder->CreateSDiv(lhs, rhs, "divtmp");
+    case Operator::kMul:
+      if (lhs->getType()->isFloatingPointTy()) {
+        return builder->CreateFMul(lhs, rhs, "multmp");
+      }
+      return builder->CreateMul(lhs, rhs, "multmp");
+    case Operator::kMod:
+      if (lhs->getType()->isFloatingPointTy()) {
+        return builder->CreateFRem(lhs, rhs, "modtmp");
+      }
+      return builder->CreateSRem(lhs, rhs, "modtmp");
     case Operator::kEq:
       if (lhs->getType()->isFloatingPointTy()) {
         return builder->CreateFCmpUEQ(lhs, rhs, "cmptmp");

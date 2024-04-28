@@ -39,6 +39,9 @@ WHITESPACE    [ \t\n]
 (0|([1-9]{DIGIT}*))?\.{DIGIT}+          { yylval.f32 = atof(yytext); return F32; }
 "+"                                     { yylval.op = chovl::Operator::kAdd; return OP_ADD; }
 "-"                                     { yylval.op = chovl::Operator::kSub; return OP_SUB; }
+"/"                                     { yylval.op = chovl::Operator::kDiv; return OP_DIV; }
+"%"                                     { yylval.op = chovl::Operator::kMod; return OP_MOD; }
+"*"                                     { yylval.op = chovl::Operator::kMul; return OP_MUL; }
 "<"                                     { yylval.op = chovl::Operator::kLessThan; return OP_LT; }
 "<="                                    { yylval.op = chovl::Operator::kLessEq; return OP_LEQ; }
 ">"                                     { yylval.op = chovl::Operator::kGreaterThan; return OP_GT; }
@@ -48,6 +51,7 @@ WHITESPACE    [ \t\n]
 "||"                                    { yylval.op = chovl::Operator::kOr; return OP_OR; }
 "&&"                                    { yylval.op = chovl::Operator::kAnd; return OP_AND; }
 \/\/[^\n]*                              ;
+\n                                      ;
 .                                       ;
 
 %%

@@ -1,0 +1,13 @@
+define i32 @foo() {
+entry:
+  ret i32 2
+}
+
+define i32 @main() {
+entry:
+  %0 = call i32 @foo()
+  %addtmp = add i32 %0, 5
+  %addtmp1 = sub i32 %addtmp, 7
+  ret i32 %addtmp1
+}
+
