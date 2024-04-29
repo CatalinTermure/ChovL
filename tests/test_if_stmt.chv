@@ -16,5 +16,11 @@ fn i32 main() {
     x = 4;
   }
 
+  if (y > x) then {
+    putchar('O');
+    putchar('K');
+    x = 2;
+  }
+
   0
 }

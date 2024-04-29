@@ -27,5 +27,17 @@ else:                                             ; preds = %entry
   br label %ifcont
 
 ifcont:                                           ; preds = %else, %then
+  %y5 = load i32, ptr %y, align 4
+  %x6 = load i32, ptr %x, align 4
+  %cmptmp7 = icmp sgt i32 %y5, %x6
+  br i1 %cmptmp7, label %then4, label %ifcont8
+
+then4:                                            ; preds = %ifcont
+  %5 = call i32 @putchar(i8 79)
+  %6 = call i32 @putchar(i8 75)
+  store i32 2, ptr %x, align 4
+  br label %ifcont8
+
+ifcont8:                                          ; preds = %then4, %ifcont
   ret i32 0
 }

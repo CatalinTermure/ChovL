@@ -241,7 +241,11 @@ llvm::Value* CondExprNode::codegen(Context& context) {
   BasicBlock* merge_block = BasicBlock::Create(context.llvm_context, "ifcont");
 
   llvm::Value* cond_val = cond_->codegen(context);
-  context.llvm_builder->CreateCondBr(cond_val, then_block, else_block);
+  if (else_) {
+    context.llvm_builder->CreateCondBr(cond_val, then_block, else_block);
+  } else {
+    context.llvm_builder->CreateCondBr(cond_val, then_block, merge_block);
+  }
 
   context.llvm_builder->SetInsertPoint(then_block);
   llvm::Value* then_val = then_->codegen(context);
@@ -252,11 +256,10 @@ llvm::Value* CondExprNode::codegen(Context& context) {
   context.llvm_builder->CreateBr(merge_block);
   then_block = context.llvm_builder->GetInsertBlock();
 
-  curr_func->insert(curr_func->end(), else_block);
-  context.llvm_builder->SetInsertPoint(else_block);
-
   llvm::Value* else_val = nullptr;
   if (else_) {
+    curr_func->insert(curr_func->end(), else_block);
+    context.llvm_builder->SetInsertPoint(else_block);
     else_val = else_->codegen(context);
     context.llvm_builder->CreateBr(merge_block);
     else_block = context.llvm_builder->GetInsertBlock();
@@ -288,17 +291,20 @@ llvm::Value* CondStatementNode::codegen(Context& context) {
   BasicBlock* merge_block = BasicBlock::Create(context.llvm_context, "ifcont");
 
   llvm::Value* cond_val = cond_->codegen(context);
-  context.llvm_builder->CreateCondBr(cond_val, then_block, else_block);
+  if (else_) {
+    context.llvm_builder->CreateCondBr(cond_val, then_block, else_block);
+  } else {
+    context.llvm_builder->CreateCondBr(cond_val, then_block, merge_block);
+  }
 
   context.llvm_builder->SetInsertPoint(then_block);
   then_->codegen(context);
   context.llvm_builder->CreateBr(merge_block);
   then_block = context.llvm_builder->GetInsertBlock();
 
-  curr_func->insert(curr_func->end(), else_block);
-  context.llvm_builder->SetInsertPoint(else_block);
-
   if (else_) {
+    curr_func->insert(curr_func->end(), else_block);
+    context.llvm_builder->SetInsertPoint(else_block);
     else_->codegen(context);
     context.llvm_builder->CreateBr(merge_block);
     else_block = context.llvm_builder->GetInsertBlock();

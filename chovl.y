@@ -111,6 +111,7 @@ statement : expression SEPARATOR { $$ = $1; }
           | IDENTIFIER OP_ASSIGN expression SEPARATOR { $$ = new chovl::VariableAssignmentNode($1, $3); }
           | block_statement { $$ = $1; }
           | KW_IF primary_expression KW_THEN block_statement KW_ELSE block_statement { $$ = new chovl::CondStatementNode($2, $4, $6); }
+          | KW_IF primary_expression KW_THEN block_statement { $$ = new chovl::CondStatementNode($2, $4, nullptr); }
           ;
 
 statement_list : statement { $$ = new chovl::ASTListNode(); $$->push_back($1); }
