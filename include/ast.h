@@ -22,6 +22,13 @@ class ASTNode {
   virtual ~ASTNode() = default;
 };
 
+class AssignableNode : public ASTNode {
+ public:
+  virtual llvm::Value *codegen(Context &context) = 0;
+  virtual llvm::Value *llvm_alloca(Context &context) = 0;
+  virtual ~AssignableNode() = default;
+};
+
 class ASTAggregateNode {
  public:
   virtual std::vector<llvm::Value *> codegen(Context &context) = 0;
@@ -39,16 +46,6 @@ class I32Node : public ASTNode {
   int32_t value_;
 };
 
-class I64Node : public ASTNode {
- public:
-  explicit I64Node(int64_t value) : value_(value) {}
-
-  llvm::Value *codegen(Context &context) override;
-
- private:
-  int64_t value_;
-};
-
 class F32Node : public ASTNode {
  public:
   explicit F32Node(float value) : value_(value) {}
@@ -57,16 +54,6 @@ class F32Node : public ASTNode {
 
  private:
   float value_;
-};
-
-class F64Node : public ASTNode {
- public:
-  explicit F64Node(double value) : value_(value) {}
-
-  llvm::Value *codegen(Context &context) override;
-
- private:
-  double value_;
 };
 
 class CharNode : public ASTNode {
@@ -185,7 +172,7 @@ class CastOpNode : public ASTNode {
 
 class BlockNode : public ASTNode {
  public:
-  BlockNode(ASTAggregateNode *body, bool is_void = false);
+  explicit BlockNode(ASTAggregateNode *body, bool is_void = false);
 
   llvm::Value *codegen(Context &context) override;
 
@@ -206,22 +193,23 @@ class VariableDeclarationNode : public ASTNode {
   std::unique_ptr<ASTNode> value_;
 };
 
-class VariableAssignmentNode : public ASTNode {
+class AssignmentNode : public ASTNode {
  public:
-  VariableAssignmentNode(const char *name, ASTNode *value);
+  AssignmentNode(AssignableNode *destination, ASTNode *value);
 
   llvm::Value *codegen(Context &context) override;
 
  private:
-  std::string name_;
+  std::unique_ptr<AssignableNode> destination_;
   std::unique_ptr<ASTNode> value_;
 };
 
-class VariableNode : public ASTNode {
+class VariableNode : public AssignableNode {
  public:
   explicit VariableNode(const char *name);
 
   llvm::Value *codegen(Context &context) override;
+  llvm::Value *llvm_alloca(Context &context) override;
 
  private:
   std::string name_;
@@ -249,6 +237,18 @@ class CondStatementNode : public ASTNode {
   std::unique_ptr<ASTNode> cond_;
   std::unique_ptr<ASTNode> then_;
   std::unique_ptr<ASTNode> else_;
+};
+
+class ArrayAccessNode : public AssignableNode {
+ public:
+  ArrayAccessNode(const char *name, ASTNode *index);
+
+  llvm::Value *codegen(Context &context) override;
+  llvm::Value *llvm_alloca(Context &context) override;
+
+ private:
+  std::string name_;
+  std::unique_ptr<ASTNode> index_;
 };
 
 class AST {

@@ -22,15 +22,18 @@ void yyerror(const char *s) {
     float f32;
     double f64;
     chovl::ASTNode *node;
+    chovl::AssignableNode *assignable;
     chovl::TypeNode *type_id;
     chovl::ParameterNode *param;
     chovl::ParameterListNode *params;
     chovl::ASTAggregateNode *aggregate;
     chovl::Operator op;
+    chovl::PrimitiveType primitive;
     char *str;
     char chr;
 }
 
+%type <assignable> assignable_value
 %type <node> binary_expression additive_expression multiplicative_expression
 %type <node> constant function_definition function_body function_prototype
 %type <node> function_declaration primary_expression expression block_expression function_call statement
@@ -39,9 +42,10 @@ void yyerror(const char *s) {
 %type <param> parameter
 %type <params> formal_param_list non_void_formal_param_list
 %type <type_id> type_identifier
+%type <primitive> primitive_type
 %type <op> additive_operator multiplicative_operator conditional_operator conditional_composition_operator
 
-%token OPEN_BRACK CLOSED_BRACK
+%token OPEN_BRACK CLOSED_BRACK OPEN_SQ_BRACK CLOSED_SQ_BRACK
 %token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR COMMA
 %token KW_FN KW_I32 KW_F32 KW_AS KW_CHAR KW_IF KW_THEN KW_ELSE
 %token OP_ASSIGN
@@ -85,9 +89,13 @@ non_void_formal_param_list : parameter { $$ = new chovl::ParameterListNode(); $$
 parameter : type_identifier IDENTIFIER { $$ = new chovl::ParameterNode($1, $2); }
           ;
 
-type_identifier : KW_I32 { $$ = new chovl::TypeNode(chovl::PrimitiveType::kI32); }
-                | KW_F32 { $$ = new chovl::TypeNode(chovl::PrimitiveType::kF32); }
-                | KW_CHAR { $$ = new chovl::TypeNode(chovl::PrimitiveType::kChar); }
+primitive_type : KW_I32 { $$ = chovl::PrimitiveType::kI32; }
+               | KW_F32 { $$ = chovl::PrimitiveType::kF32; }
+               | KW_CHAR { $$ = chovl::PrimitiveType::kChar; }
+               ;
+
+type_identifier : primitive_type { $$ = new chovl::TypeNode($1); }
+                | primitive_type OPEN_SQ_BRACK I32 CLOSED_SQ_BRACK { $$ = new chovl::TypeNode(chovl::Type($1, $3)); }
                 ;
 
 function_body : OP_ASSIGN expression SEPARATOR { $$ = $2; }
@@ -108,7 +116,7 @@ block_statement : OPEN_BRACK statement_list CLOSED_BRACK { $$ = new chovl::Block
 statement : expression SEPARATOR { $$ = $1; }
           | type_identifier IDENTIFIER SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, nullptr); }
           | type_identifier IDENTIFIER OP_ASSIGN expression SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, $4); }
-          | IDENTIFIER OP_ASSIGN expression SEPARATOR { $$ = new chovl::VariableAssignmentNode($1, $3); }
+          | assignable_value OP_ASSIGN expression SEPARATOR { $$ = new chovl::AssignmentNode($1, $3); }
           | block_statement { $$ = $1; }
           | KW_IF primary_expression KW_THEN block_statement KW_ELSE block_statement { $$ = new chovl::CondStatementNode($2, $4, $6); }
           | KW_IF primary_expression KW_THEN block_statement { $$ = new chovl::CondStatementNode($2, $4, nullptr); }
@@ -138,12 +146,15 @@ additive_expression : multiplicative_expression { $$ = $1; }
 binary_expression : additive_expression { $$ = $1; }
                   ;
 
+assignable_value : IDENTIFIER { $$ = new chovl::VariableNode($1); }
+                 | IDENTIFIER OPEN_SQ_BRACK expression CLOSED_SQ_BRACK { $$ = new chovl::ArrayAccessNode($1, $3); }
+
 primary_expression : constant { $$ = $1; }
                    | constant KW_AS type_identifier { $$ = new chovl::CastOpNode($3, $1); }
                    | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
                    | function_call { $$ = $1; }
                    | block_expression { $$ = $1; }
-                   | IDENTIFIER { $$ = new chovl::VariableNode($1); }
+                   | assignable_value { $$ = $1; }
                    | KW_IF primary_expression KW_THEN primary_expression KW_ELSE primary_expression { $$ = new chovl::CondExprNode($2, $4, $6); }
                    ;
 

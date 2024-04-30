@@ -11,11 +11,14 @@
 
 namespace chovl {
 
+enum class AggregateType { kSingular, kArray };
 enum class PrimitiveType { kNone, kI32, kF32, kChar };
 
 struct Type {
   // Intentionally not explicit to allow implicit conversion from PrimitiveType.
-  Type(PrimitiveType kind) : kind_(kind) {}
+  Type(PrimitiveType kind) : kind_(kind), aggregate_kind_(AggregateType::kSingular) {}
+  Type(PrimitiveType kind, size_t size)
+      : kind_(kind), aggregate_kind_(AggregateType::kArray), size_(size) {}
 
   explicit Type(llvm::Type *type);
 
@@ -30,6 +33,8 @@ struct Type {
 
  private:
   PrimitiveType kind_;
+  AggregateType aggregate_kind_;
+  size_t size_;
 };
 
 class SymbolicValue {

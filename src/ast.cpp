@@ -54,16 +54,8 @@ llvm::Value* I32Node::codegen(Context& context) {
   return context.llvm_builder->getInt32(value_);
 }
 
-llvm::Value* I64Node::codegen(Context& context) {
-  return context.llvm_builder->getInt64(value_);
-}
-
 llvm::Value* F32Node::codegen(Context& context) {
   return ConstantFP::get(llvm::Type::getFloatTy(context.llvm_context), value_);
-}
-
-llvm::Value* F64Node::codegen(Context& context) {
-  return ConstantFP::get(llvm::Type::getDoubleTy(context.llvm_context), value_);
 }
 
 llvm::Value* BinaryExprNode::codegen(Context& context) {
@@ -220,13 +212,18 @@ llvm::Value* VariableNode::codegen(Context& context) {
                                           sym.llvm_alloca(), name_);
 }
 
-VariableAssignmentNode::VariableAssignmentNode(const char* name, ASTNode* value)
-    : name_(name), value_(value) {}
-
-llvm::Value* VariableAssignmentNode::codegen(Context& context) {
+llvm::Value* VariableNode::llvm_alloca(Context& context) {
   SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
+  return sym.llvm_alloca();
+}
+
+AssignmentNode::AssignmentNode(AssignableNode *destination, ASTNode* value)
+    : destination_(destination), value_(value) {}
+
+llvm::Value* AssignmentNode::codegen(Context& context) {
+  llvm::Value* llvm_alloca = destination_->llvm_alloca(context);
   llvm::Value* val = value_->codegen(context);
-  return context.llvm_builder->CreateStore(val, sym.llvm_alloca());
+  return context.llvm_builder->CreateStore(val, llvm_alloca);
 }
 
 CondExprNode::CondExprNode(ASTNode* cond, ASTNode* then, ASTNode* els)
@@ -314,6 +311,26 @@ llvm::Value* CondStatementNode::codegen(Context& context) {
   context.llvm_builder->SetInsertPoint(merge_block);
 
   return nullptr;
+}
+
+ArrayAccessNode::ArrayAccessNode(const char* name, ASTNode* index)
+    : name_(name), index_(index) {}
+
+llvm::Value* ArrayAccessNode::codegen(Context& context) {
+  SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
+  auto array_type =
+      static_cast<llvm::ArrayType*>(sym.llvm_alloca()->getAllocatedType());
+  llvm::Value* idx = index_->codegen(context);
+  llvm::Value* ptr = context.llvm_builder->CreateGEP(
+      sym.llvm_alloca()->getAllocatedType(), sym.llvm_alloca(), idx);
+  return context.llvm_builder->CreateLoad(array_type->getElementType(), ptr);
+}
+
+llvm::Value* ArrayAccessNode::llvm_alloca(Context& context) {
+  SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
+  llvm::Value* idx = index_->codegen(context);
+  return context.llvm_builder->CreateGEP(sym.llvm_alloca()->getAllocatedType(),
+                                        sym.llvm_alloca(), idx);
 }
 
 }  // namespace chovl

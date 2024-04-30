@@ -20,6 +20,8 @@ WHITESPACE    [ \t\n]
 ")"                                     { return CLOSED_PAREN; }
 "{"                                     { return OPEN_BRACK; }
 "}"                                     { return CLOSED_BRACK; }
+"["                                     { return OPEN_SQ_BRACK; }
+"]"                                     { return CLOSED_SQ_BRACK; }
 "fn"                                    { return KW_FN; }
 "if"                                    { return KW_IF; }
 "then"                                  { return KW_THEN; }
