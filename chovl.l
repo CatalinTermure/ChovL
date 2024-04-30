@@ -12,7 +12,6 @@ void parse_int(const char *str) {
 
 LETTER        [a-zA-Z_]
 DIGIT         [0-9]
-WHITESPACE    [ \t\n]
 
 %%
 

@@ -15,8 +15,9 @@ enum class AggregateType { kSingular, kArray };
 enum class PrimitiveType { kNone, kI32, kF32, kChar };
 
 struct Type {
-  // Intentionally not explicit to allow implicit conversion from PrimitiveType.
-  Type(PrimitiveType kind) : kind_(kind), aggregate_kind_(AggregateType::kSingular) {}
+  explicit Type(PrimitiveType kind)
+      : kind_(kind),
+        aggregate_kind_(AggregateType::kSingular) {}
   Type(PrimitiveType kind, size_t size)
       : kind_(kind), aggregate_kind_(AggregateType::kArray), size_(size) {}
 
@@ -45,8 +46,8 @@ class SymbolicValue {
   SymbolicValue(const SymbolicValue &) = delete;
   SymbolicValue &operator=(const SymbolicValue &) = delete;
 
-  SymbolicValue(SymbolicValue &&);
-  SymbolicValue &operator=(SymbolicValue &&);
+  SymbolicValue(SymbolicValue &&) noexcept;
+  SymbolicValue &operator=(SymbolicValue &&) noexcept;
 
   llvm::Value *llvm_value() const { return value_; }
   llvm::AllocaInst *llvm_alloca() const { return alloca_; }

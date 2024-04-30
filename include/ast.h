@@ -259,7 +259,7 @@ class AST {
 
  private:
   Context llvm_context;
-  ASTAggregateNode *root_;
+  std::unique_ptr<ASTAggregateNode> root_;
 };
 
 }  // namespace chovl

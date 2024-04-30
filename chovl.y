@@ -34,6 +34,7 @@ void yyerror(const char *s) {
 }
 
 %type <assignable> assignable_value
+%type <node> cast_expression
 %type <node> binary_expression additive_expression multiplicative_expression
 %type <node> constant function_definition function_body function_prototype
 %type <node> function_declaration primary_expression expression block_expression function_call statement
@@ -72,9 +73,10 @@ function_definition : function_declaration function_body { $$ = new chovl::Funct
                     ;
 
 function_prototype : function_declaration SEPARATOR { $$ = $1; }
+                   ;
 
 function_declaration : KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN ARROW type_identifier { $$ = new chovl::FunctionDeclNode($2, $4, $7); }
-                     | KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::PrimitiveType::kNone)); }
+                     | KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::Type(chovl::PrimitiveType::kNone))); }
                      | KW_FN type_identifier IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($3, $5, $2); }
                      ;
 
@@ -94,7 +96,7 @@ primitive_type : KW_I32 { $$ = chovl::PrimitiveType::kI32; }
                | KW_CHAR { $$ = chovl::PrimitiveType::kChar; }
                ;
 
-type_identifier : primitive_type { $$ = new chovl::TypeNode($1); }
+type_identifier : primitive_type { $$ = new chovl::TypeNode(chovl::Type($1)); }
                 | primitive_type OPEN_SQ_BRACK I32 CLOSED_SQ_BRACK { $$ = new chovl::TypeNode(chovl::Type($1, $3)); }
                 ;
 
@@ -135,8 +137,12 @@ expression : binary_expression { $$ = $1; }
            | binary_conditional_expression { $$ = $1; }
            ;
 
-multiplicative_expression : primary_expression { $$ = $1; }
-                          | primary_expression multiplicative_operator primary_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
+cast_expression : primary_expression { $$ = $1; }
+                | primary_expression KW_AS type_identifier { $$ = new chovl::CastOpNode($3, $1); }
+                ;
+
+multiplicative_expression : cast_expression { $$ = $1; }
+                          | multiplicative_expression multiplicative_operator cast_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
                           ;
 
 additive_expression : multiplicative_expression { $$ = $1; }
@@ -148,9 +154,9 @@ binary_expression : additive_expression { $$ = $1; }
 
 assignable_value : IDENTIFIER { $$ = new chovl::VariableNode($1); }
                  | IDENTIFIER OPEN_SQ_BRACK expression CLOSED_SQ_BRACK { $$ = new chovl::ArrayAccessNode($1, $3); }
+                 ;
 
 primary_expression : constant { $$ = $1; }
-                   | constant KW_AS type_identifier { $$ = new chovl::CastOpNode($3, $1); }
                    | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
                    | function_call { $$ = $1; }
                    | block_expression { $$ = $1; }

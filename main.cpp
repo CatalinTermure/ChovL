@@ -9,7 +9,7 @@ extern int yylex(void);
 
 int main(int argc, char **argv) {
   if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " file [-o output_file]" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " file [-o output_file]" << '\n';
     return 1;
   }
   
@@ -19,25 +19,26 @@ int main(int argc, char **argv) {
       if (std::string(argv[2]) == "-o") {
         return argv[3];
       } else {
-        throw std::runtime_error("Invalid argument");
+        std::cout << "Invalid argument";
+        exit(1);
       }
     }
     return "a.ll";
   }();
 
   if (freopen(input_file, "r", stdin) == nullptr) {
-    std::cerr << "Could not open input file: " << input_file << std::endl;
+    std::cerr << "Could not open input file: " << input_file << '\n';
     return 1;
   }
   if (freopen(output_file, "w", stdout) == nullptr) {
-    std::cerr << "Could not open output file: " << output_file << std::endl;
+    std::cerr << "Could not open output file: " << output_file << '\n';
     return 1;
   }
 
   try {
     yyparse();
   } catch (std::exception &e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << e.what() << '\n';
     return 1;
   }
   return 0;

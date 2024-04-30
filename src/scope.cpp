@@ -2,6 +2,7 @@
 
 namespace chovl {
 Type::Type(llvm::Type* type) {
+  aggregate_kind_ = AggregateType::kSingular;
   if (type->isIntegerTy(32)) {
     kind_ = PrimitiveType::kI32;
   } else if (type->isFloatTy()) {
@@ -10,8 +11,17 @@ Type::Type(llvm::Type* type) {
     kind_ = PrimitiveType::kChar;
   } else if (type->isVoidTy()) {
     kind_ = PrimitiveType::kNone;
-  } else {
-    throw std::runtime_error("Unsupported type");
+  } else if (type->isArrayTy()) {
+    auto array_type = llvm::cast<llvm::ArrayType>(type);
+    size_ = array_type->getNumElements();
+    if (array_type->getElementType()->isIntegerTy(32)) {
+      kind_ = PrimitiveType::kI32;
+    } else if (array_type->getElementType()->isFloatTy()) {
+      kind_ = PrimitiveType::kF32;
+    } else if (array_type->getElementType()->isIntegerTy(8)) {
+      kind_ = PrimitiveType::kChar;
+    }
+    aggregate_kind_ = AggregateType::kArray;
   }
 }
 
@@ -46,12 +56,12 @@ llvm::Type* Type::llvm_type(Context& context) const {
   return nullptr;
 }
 
-SymbolicValue::SymbolicValue(SymbolicValue&& other)
+SymbolicValue::SymbolicValue(SymbolicValue&& other) noexcept
     : value_(other.value_), type_(other.type_), alloca_(other.alloca_) {
   other.value_ = nullptr;
 }
 
-SymbolicValue& SymbolicValue::operator=(SymbolicValue&& other) {
+SymbolicValue& SymbolicValue::operator=(SymbolicValue&& other) noexcept {
   value_ = other.value_;
   type_ = other.type_;
   alloca_ = other.alloca_;
