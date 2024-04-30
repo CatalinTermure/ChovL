@@ -1,4 +1,4 @@
 define float @main() {
 entry:
-  ret float 0x4017333340000000
+  ret float 0xC001999980000000
 }

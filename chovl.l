@@ -37,8 +37,8 @@ WHITESPACE    [ \t\n]
 '.'                                     { yylval.chr = yytext[1]; return CHAR; }
 '\\n'                                   { yylval.chr = 10; return CHAR; }
 {LETTER}({LETTER}|{DIGIT})*             { yylval.str = (char*)malloc(strlen(yytext)); strcpy(yylval.str, yytext); return IDENTIFIER; }
-0|([1-9]{DIGIT}*)                       { parse_int(yytext); return I32; }
-(0|([1-9]{DIGIT}*))?\.{DIGIT}+          { yylval.f32 = atof(yytext); return F32; }
+-?(0|([1-9]{DIGIT}*))                   { parse_int(yytext); return I32; }
+-?((0|([1-9]{DIGIT}*))?\.{DIGIT}+)      { yylval.f32 = atof(yytext); return F32; }
 "+"                                     { yylval.op = chovl::Operator::kAdd; return OP_ADD; }
 "-"                                     { yylval.op = chovl::Operator::kSub; return OP_SUB; }
 "/"                                     { yylval.op = chovl::Operator::kDiv; return OP_DIV; }
