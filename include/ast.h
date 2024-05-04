@@ -43,6 +43,16 @@ class ASTAggregateNode {
   virtual ~ASTAggregateNode() = default;
 };
 
+class StringLiteralNode : public ASTNode {
+ public:
+  explicit StringLiteralNode(const char *value) : value_(value) {}
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::string value_;
+};
+
 class I32Node : public ASTNode {
  public:
   explicit I32Node(int32_t value) : value_(value) {}
@@ -128,7 +138,7 @@ class FunctionDeclNode : public ASTNode {
   llvm::Value *codegen(Context &context) override;
 
  private:
-  const char *identifier_;
+  std::string identifier_;
   std::unique_ptr<ParameterListNode> params_;
   std::unique_ptr<TypeNode> return_type_;
 };

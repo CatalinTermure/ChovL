@@ -1,0 +1,4 @@
+fn i32 main() {
+  char[6] str = "Hello";
+  0
+}

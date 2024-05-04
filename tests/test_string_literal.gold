@@ -1,0 +1,7 @@
+define i32 @main() {
+entry:
+  %str = alloca [6 x i8], align 1
+  store [6 x i8] c"Hello\00", ptr %str, align 1
+  ret i32 0
+}
+

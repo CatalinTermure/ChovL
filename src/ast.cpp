@@ -381,4 +381,8 @@ llvm::Value* MultiAssignmentNode::codegen(Context& context) {
                                     values_->codegen_aggregate(context));
 }
 
+llvm::Value* StringLiteralNode::codegen(Context& context) {
+  return llvm::ConstantDataArray::getString(context.llvm_context, value_, true);
+}
+
 }  // namespace chovl

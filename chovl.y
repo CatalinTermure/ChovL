@@ -50,7 +50,7 @@ void yyerror(const char *s) {
 %token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR COMMA
 %token KW_FN KW_I32 KW_F32 KW_AS KW_CHAR KW_IF KW_THEN KW_ELSE
 %token OP_ASSIGN
-%token <str> IDENTIFIER
+%token <str> IDENTIFIER STRING_LITERAL
 %token <i32> I32
 %token <f32> F32
 %token <chr> CHAR
@@ -187,6 +187,7 @@ multi_expression : expression COMMA expression { $$ = new chovl::ASTListNode(); 
 constant : F32 { $$ = new chovl::F32Node($1); }
          | I32 { $$ = new chovl::I32Node($1); }
          | CHAR { $$ = new chovl::CharNode($1); }
+         | STRING_LITERAL { $$ = new chovl::StringLiteralNode($1); }
          ;
 
 additive_operator : OP_ADD { $$ = $1; }
