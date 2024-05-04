@@ -2,6 +2,8 @@
 
 #include <llvm/IR/Verifier.h>
 
+#include <format>
+
 namespace chovl {
 
 using llvm::BasicBlock;
@@ -33,14 +35,30 @@ llvm::Value* CastValue(Context& context, llvm::Value* src, llvm::Type* src_type,
     return context.llvm_builder->CreateFPToSI(src, dst_type);
   }
 
-  return nullptr;
+  std::string err_msg;
+  llvm::raw_string_ostream rso(err_msg);
+  rso << "Cannot cast from ";
+  src_type->print(rso);
+  rso << " to ";
+  dst_type->print(rso);
+  rso << "\n";
+  
+  throw std::runtime_error(rso.str());
 }
+
+llvm::Value* AssignValue(Context& context, llvm::Value* val, llvm::Value* ptr, llvm::Type *type) {
+  if (val->getType() != type) {
+    val = CastValue(context, val, val->getType(), type);
+  }
+  return context.llvm_builder->CreateStore(val, ptr);
+}
+
 }  // namespace
 
 AST::AST(ASTAggregateNode* root) : root_(root) {}
 
 void AST::codegen() {
-  std::vector<llvm::Value*> vals = root_->codegen(llvm_context);
+  std::vector<llvm::Value*> vals = root_->codegen_aggregate(llvm_context);
   std::string type_str;
   llvm::raw_string_ostream rso(type_str);
   for (auto val : vals) {
@@ -70,7 +88,7 @@ TypeNode::TypeNode(Type type) : type_(type) {}
 ParameterNode::ParameterNode(TypeNode* type, const char* name)
     : type_(type), name_(name) {}
 
-std::vector<llvm::Value*> ASTListNode::codegen(Context& context) {
+std::vector<llvm::Value*> ASTListNode::codegen_aggregate(Context& context) {
   std::vector<llvm::Value*> vals;
   vals.reserve(nodes_.size());
   for (auto& node : nodes_) {
@@ -153,11 +171,11 @@ FunctionCallNode::FunctionCallNode(const char* identifier,
 llvm::Value* FunctionCallNode::codegen(Context& context) {
   Function* func = context.llvm_module->getFunction(identifier_);
   if (!func) {
-    llvm::errs() << "Function not found: " << identifier_ << "\n";
+    std::cerr << "Function not found: " << identifier_ << "\n";
     return nullptr;
   }
 
-  std::vector<llvm::Value*> args = params_->codegen(context);
+  std::vector<llvm::Value*> args = params_->codegen_aggregate(context);
   return context.llvm_builder->CreateCall(func, args);
 }
 
@@ -166,7 +184,7 @@ BlockNode::BlockNode(ASTAggregateNode* body, bool is_void)
 
 llvm::Value* BlockNode::codegen(Context& context) {
   context.symbol_table->AddScope();
-  std::vector<llvm::Value*> vals = body_->codegen(context);
+  std::vector<llvm::Value*> vals = body_->codegen_aggregate(context);
   context.symbol_table->RemoveScope();
 
   if (is_void_ || vals.empty()) {
@@ -212,18 +230,35 @@ llvm::Value* VariableNode::codegen(Context& context) {
                                           sym.llvm_alloca(), name_);
 }
 
-llvm::Value* VariableNode::llvm_alloca(Context& context) {
+llvm::Value* VariableNode::assign(Context& context, llvm::Value* val) {
   SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
-  return sym.llvm_alloca();
+  return AssignValue(context, val, sym.llvm_alloca(), sym.llvm_type(context));
+}
+
+llvm::Value* VariableNode::multi_assign(Context& context,
+                                        std::vector<llvm::Value*> values) {
+  SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
+  if (!sym.llvm_type(context)->isArrayTy()) {
+    throw std::runtime_error("Cannot multi-assign to non-array type");
+  }
+  size_t size = sym.llvm_type(context)->getArrayNumElements();
+  for (size_t i = 0; i < size; ++i) {
+    llvm::Value* val = i < values.size() ? values[i] : values.back();
+    auto element_type = sym.llvm_type(context)->getArrayElementType();
+    llvm::Value* ptr = context.llvm_builder->CreateGEP(
+        element_type, sym.llvm_alloca(), context.llvm_builder->getInt32(i));
+    AssignValue(context, val, ptr, element_type);
+  }
+
+  return sym.llvm_value();
 }
 
 AssignmentNode::AssignmentNode(AssignableNode *destination, ASTNode* value)
     : destination_(destination), value_(value) {}
 
 llvm::Value* AssignmentNode::codegen(Context& context) {
-  llvm::Value* llvm_alloca = destination_->llvm_alloca(context);
   llvm::Value* val = value_->codegen(context);
-  return context.llvm_builder->CreateStore(val, llvm_alloca);
+  return destination_->assign(context, val);
 }
 
 CondExprNode::CondExprNode(ASTNode* cond, ASTNode* then, ASTNode* els)
@@ -325,13 +360,25 @@ llvm::Value* ArrayAccessNode::codegen(Context& context) {
   return context.llvm_builder->CreateLoad(element_type, ptr);
 }
 
-llvm::Value* ArrayAccessNode::llvm_alloca(Context& context) {
+llvm::Value* ArrayAccessNode::assign(Context& context, llvm::Value* val) {
   SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
-  llvm::Value* idx = index_->codegen(context);
   auto element_type =
       llvm::cast<llvm::ArrayType>(sym.llvm_alloca()->getAllocatedType())
           ->getElementType();
-  return context.llvm_builder->CreateGEP(element_type, sym.llvm_alloca(), idx);
+  llvm::Value* idx = index_->codegen(context);
+  llvm::Value* ptr =
+      context.llvm_builder->CreateGEP(element_type, sym.llvm_alloca(), idx);
+  return context.llvm_builder->CreateStore(val, ptr);
+}
+
+MultiAssignmentNode::MultiAssignmentNode(AssignableNode* destination,
+                                         ASTAggregateNode* values)
+    : destination_(dynamic_cast<MultiAssignableNode*>(destination)),
+      values_(values) {}
+
+llvm::Value* MultiAssignmentNode::codegen(Context& context) {
+  return destination_->multi_assign(context,
+                                    values_->codegen_aggregate(context));
 }
 
 }  // namespace chovl

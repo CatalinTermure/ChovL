@@ -24,14 +24,21 @@ class ASTNode {
 
 class AssignableNode : public ASTNode {
  public:
-  virtual llvm::Value *codegen(Context &context) = 0;
-  virtual llvm::Value *llvm_alloca(Context &context) = 0;
+  virtual llvm::Value *assign(Context &context, llvm::Value *value) = 0;
   virtual ~AssignableNode() = default;
+};
+
+class MultiAssignableNode : public AssignableNode {
+ public:
+  virtual llvm::Value *assign(Context &context, llvm::Value *value) = 0;
+  virtual llvm::Value *multi_assign(Context &context,
+                                    std::vector<llvm::Value *> value) = 0;
+  virtual ~MultiAssignableNode() = default;
 };
 
 class ASTAggregateNode {
  public:
-  virtual std::vector<llvm::Value *> codegen(Context &context) = 0;
+  virtual std::vector<llvm::Value *> codegen_aggregate(Context &context) = 0;
   virtual void push_back(ASTNode *node) = 0;
   virtual ~ASTAggregateNode() = default;
 };
@@ -131,7 +138,7 @@ class ASTListNode : public ASTAggregateNode {
   ASTListNode() = default;
 
   void push_back(ASTNode *node) override { nodes_.emplace_back(node); }
-  std::vector<llvm::Value *> codegen(Context &context) override;
+  std::vector<llvm::Value *> codegen_aggregate(Context &context) override;
 
  private:
   std::vector<std::unique_ptr<ASTNode>> nodes_;
@@ -204,12 +211,25 @@ class AssignmentNode : public ASTNode {
   std::unique_ptr<ASTNode> value_;
 };
 
-class VariableNode : public AssignableNode {
+class MultiAssignmentNode : public ASTNode {
+ public:
+  MultiAssignmentNode(AssignableNode *destination, ASTAggregateNode *values);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::unique_ptr<MultiAssignableNode> destination_;
+  std::unique_ptr<ASTAggregateNode> values_;
+};
+
+class VariableNode : public MultiAssignableNode {
  public:
   explicit VariableNode(const char *name);
 
   llvm::Value *codegen(Context &context) override;
-  llvm::Value *llvm_alloca(Context &context) override;
+  llvm::Value *assign(Context &context, llvm::Value *value) override;
+  llvm::Value *multi_assign(Context &context,
+                            std::vector<llvm::Value *> values) override;
 
  private:
   std::string name_;
@@ -244,7 +264,7 @@ class ArrayAccessNode : public AssignableNode {
   ArrayAccessNode(const char *name, ASTNode *index);
 
   llvm::Value *codegen(Context &context) override;
-  llvm::Value *llvm_alloca(Context &context) override;
+  llvm::Value *assign(Context &context, llvm::Value *value) override;
 
  private:
   std::string name_;

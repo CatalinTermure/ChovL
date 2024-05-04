@@ -39,7 +39,7 @@ void yyerror(const char *s) {
 %type <node> constant function_definition function_body function_prototype
 %type <node> function_declaration primary_expression expression block_expression function_call statement
 %type <node> block block_statement conditional_expression binary_conditional_expression
-%type <aggregate> function_definition_list actual_param_list expression_list statement_list
+%type <aggregate> function_definition_list actual_param_list expression_list statement_list multi_expression
 %type <param> parameter
 %type <params> formal_param_list non_void_formal_param_list
 %type <type_id> type_identifier
@@ -119,6 +119,7 @@ statement : expression SEPARATOR { $$ = $1; }
           | type_identifier IDENTIFIER SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, nullptr); }
           | type_identifier IDENTIFIER OP_ASSIGN expression SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, $4); }
           | assignable_value OP_ASSIGN expression SEPARATOR { $$ = new chovl::AssignmentNode($1, $3); }
+          | assignable_value OP_ASSIGN OPEN_BRACK multi_expression CLOSED_BRACK SEPARATOR { $$ = new chovl::MultiAssignmentNode($1, $4); }
           | block_statement { $$ = $1; }
           | KW_IF primary_expression KW_THEN block_statement KW_ELSE block_statement { $$ = new chovl::CondStatementNode($2, $4, $6); }
           | KW_IF primary_expression KW_THEN block_statement { $$ = new chovl::CondStatementNode($2, $4, nullptr); }
@@ -176,8 +177,12 @@ function_call : IDENTIFIER OPEN_PAREN actual_param_list CLOSED_PAREN { $$ = new 
               ;
 
 actual_param_list : expression { $$ = new chovl::ASTListNode(); $$->push_back($1); }
-                  | actual_param_list COMMA expression { $1->push_back($3); $$ = $1; }
+                  | multi_expression { $$ = $1; }
                   ;
+
+multi_expression : expression COMMA expression { $$ = new chovl::ASTListNode(); $$->push_back($1); $$->push_back($3); }
+                 | multi_expression COMMA expression { $1->push_back($3); $$ = $1; }
+                 ;
 
 constant : F32 { $$ = new chovl::F32Node($1); }
          | I32 { $$ = new chovl::I32Node($1); }
