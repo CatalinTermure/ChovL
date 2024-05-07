@@ -384,4 +384,49 @@ llvm::Value* StringLiteralNode::codegen(Context& context) {
   return llvm::ConstantDataArray::getString(context.llvm_context, value_, true);
 }
 
+void VariableListNode::push_back(ASTNode* node) {
+  AssignableNode* assignable = dynamic_cast<AssignableNode*>(node);
+  if (assignable == nullptr) {
+    throw std::runtime_error(
+        "VariableListNode can only contain assignable nodes");
+  }
+
+  nodes_.emplace_back(assignable);
+}
+
+llvm::Value* VariableListNode::codegen(Context& context) {
+  throw std::runtime_error("VariableListNode cannot be used as an expression");
+}
+
+std::vector<llvm::Value*> VariableListNode::codegen_aggregate(
+    Context& context) {
+  std::vector<llvm::Value*> vals;
+  vals.reserve(nodes_.size());
+  for (auto& node : nodes_) {
+    vals.push_back(node->codegen(context));
+  }
+  return vals;
+}
+
+llvm::Value* VariableListNode::assign(Context& context, llvm::Value* value) {
+  for (auto& node : nodes_) {
+    node->assign(context, value);
+  }
+
+  return nullptr;
+}
+
+llvm::Value* VariableListNode::multi_assign(Context& context,
+                                            std::vector<llvm::Value*> values) {
+  if (values.size() != nodes_.size()) {
+    throw std::runtime_error("Number of values does not match number of nodes");
+  }
+
+  for (size_t i = 0; i < nodes_.size(); ++i) {
+    nodes_[i]->assign(context, values[i]);
+  }
+
+  return nullptr;
+}
+
 }  // namespace chovl

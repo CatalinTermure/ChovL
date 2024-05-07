@@ -36,8 +36,11 @@ class MultiAssignableNode : public AssignableNode {
   virtual ~MultiAssignableNode() = default;
 };
 
-class ASTAggregateNode {
+class ASTAggregateNode : public ASTNode {
  public:
+  virtual llvm::Value *codegen(Context &context) override {
+    throw std::runtime_error("Aggregate nodes cannot be codegen'd");
+  }
   virtual std::vector<llvm::Value *> codegen_aggregate(Context &context) = 0;
   virtual void push_back(ASTNode *node) = 0;
   virtual ~ASTAggregateNode() = default;
@@ -243,6 +246,21 @@ class VariableNode : public MultiAssignableNode {
 
  private:
   std::string name_;
+};
+
+class VariableListNode : public MultiAssignableNode, public ASTAggregateNode {
+ public:
+  VariableListNode() = default;
+
+  void push_back(ASTNode *node) override;
+  llvm::Value *codegen(Context &context) override;
+  std::vector<llvm::Value *> codegen_aggregate(Context &context) override;
+  llvm::Value *assign(Context &context, llvm::Value *value) override;
+  llvm::Value *multi_assign(Context &context,
+                            std::vector<llvm::Value *> values) override;
+
+ private:
+  std::vector<std::unique_ptr<AssignableNode>> nodes_;
 };
 
 class CondExprNode : public ASTNode {

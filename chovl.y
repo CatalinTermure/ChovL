@@ -27,6 +27,7 @@ void yyerror(const char *s) {
     chovl::ParameterNode *param;
     chovl::ParameterListNode *params;
     chovl::ASTAggregateNode *aggregate;
+    chovl::VariableListNode *aggregate_assignable;
     chovl::Operator op;
     chovl::PrimitiveType primitive;
     char *str;
@@ -40,6 +41,7 @@ void yyerror(const char *s) {
 %type <node> function_declaration primary_expression expression block_expression function_call statement
 %type <node> block block_statement conditional_expression binary_conditional_expression
 %type <aggregate> function_definition_list actual_param_list expression_list statement_list multi_expression
+%type <aggregate_assignable> multi_assignable_value assignable_value_list
 %type <param> parameter
 %type <params> formal_param_list non_void_formal_param_list
 %type <type_id> type_identifier
@@ -120,6 +122,7 @@ statement : expression SEPARATOR { $$ = $1; }
           | type_identifier IDENTIFIER OP_ASSIGN expression SEPARATOR { $$ = new chovl::VariableDeclarationNode($1, $2, $4); }
           | assignable_value OP_ASSIGN expression SEPARATOR { $$ = new chovl::AssignmentNode($1, $3); }
           | assignable_value OP_ASSIGN OPEN_BRACK multi_expression CLOSED_BRACK SEPARATOR { $$ = new chovl::MultiAssignmentNode($1, $4); }
+          | multi_assignable_value OP_ASSIGN OPEN_BRACK multi_expression CLOSED_BRACK SEPARATOR { $$ = new chovl::MultiAssignmentNode($1, $4); }
           | block_statement { $$ = $1; }
           | KW_IF primary_expression KW_THEN block_statement KW_ELSE block_statement { $$ = new chovl::CondStatementNode($2, $4, $6); }
           | KW_IF primary_expression KW_THEN block_statement { $$ = new chovl::CondStatementNode($2, $4, nullptr); }
@@ -156,6 +159,13 @@ binary_expression : additive_expression { $$ = $1; }
 assignable_value : IDENTIFIER { $$ = new chovl::VariableNode($1); }
                  | IDENTIFIER OPEN_SQ_BRACK expression CLOSED_SQ_BRACK { $$ = new chovl::ArrayAccessNode($1, $3); }
                  ;
+
+multi_assignable_value : OPEN_BRACK assignable_value_list CLOSED_BRACK { $$ = $2; }
+                       ;
+
+assignable_value_list : assignable_value COMMA assignable_value { $$ = new chovl::VariableListNode(); $$->push_back($1); $$->push_back($3); }
+                      | assignable_value_list COMMA assignable_value { $1->push_back($3); $$ = $1; }
+                      ;
 
 primary_expression : constant { $$ = $1; }
                    | OPEN_PAREN expression CLOSED_PAREN { $$ = $2; }
