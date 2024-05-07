@@ -2,8 +2,6 @@
 
 #include <llvm/IR/Verifier.h>
 
-#include <format>
-
 namespace chovl {
 
 using llvm::BasicBlock;
@@ -42,11 +40,12 @@ llvm::Value* CastValue(Context& context, llvm::Value* src, llvm::Type* src_type,
   rso << " to ";
   dst_type->print(rso);
   rso << "\n";
-  
+
   throw std::runtime_error(rso.str());
 }
 
-llvm::Value* AssignValue(Context& context, llvm::Value* val, llvm::Value* ptr, llvm::Type *type) {
+llvm::Value* AssignValue(Context& context, llvm::Value* val, llvm::Value* ptr,
+                         llvm::Type* type) {
   if (val->getType() != type) {
     val = CastValue(context, val, val->getType(), type);
   }
@@ -253,7 +252,7 @@ llvm::Value* VariableNode::multi_assign(Context& context,
   return sym.llvm_value();
 }
 
-AssignmentNode::AssignmentNode(AssignableNode *destination, ASTNode* value)
+AssignmentNode::AssignmentNode(AssignableNode* destination, ASTNode* value)
     : destination_(destination), value_(value) {}
 
 llvm::Value* AssignmentNode::codegen(Context& context) {

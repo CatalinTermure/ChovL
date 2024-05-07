@@ -16,8 +16,7 @@ enum class PrimitiveType { kNone, kI32, kF32, kChar };
 
 struct Type {
   explicit Type(PrimitiveType kind)
-      : kind_(kind),
-        aggregate_kind_(AggregateType::kSingular) {}
+      : kind_(kind), aggregate_kind_(AggregateType::kSingular) {}
   Type(PrimitiveType kind, size_t size)
       : kind_(kind), aggregate_kind_(AggregateType::kArray), size_(size) {}
 
