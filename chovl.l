@@ -33,6 +33,7 @@ DIGIT         [0-9]
 "->"                                    { return ARROW; }
 ";"                                     { return SEPARATOR; }
 ","                                     { return COMMA; }
+"&"                                     { return REF; }
 '.'                                     { yylval.chr = yytext[1]; return CHAR; }
 '\\n'                                   { yylval.chr = 10; return CHAR; }
 {LETTER}({LETTER}|{DIGIT})*             { yylval.str = (char*)malloc(strlen(yytext) + 1); strcpy(yylval.str, yytext); return IDENTIFIER; }

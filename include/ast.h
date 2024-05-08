@@ -25,12 +25,15 @@ class ASTNode {
 class AssignableNode : public ASTNode {
  public:
   virtual llvm::Value *assign(Context &context, llvm::Value *value) = 0;
+  virtual llvm::Value *llvm_alloca(Context &context) = 0;
+  virtual Type type(Context &context) = 0;
   virtual ~AssignableNode() = default;
 };
 
 class MultiAssignableNode : public AssignableNode {
  public:
   virtual llvm::Value *assign(Context &context, llvm::Value *value) = 0;
+  virtual llvm::Value *llvm_alloca(Context &context) = 0;
   virtual llvm::Value *multi_assign(Context &context,
                                     std::vector<llvm::Value *> value) = 0;
   virtual ~MultiAssignableNode() = default;
@@ -241,6 +244,8 @@ class VariableNode : public MultiAssignableNode {
 
   llvm::Value *codegen(Context &context) override;
   llvm::Value *assign(Context &context, llvm::Value *value) override;
+  llvm::Value *llvm_alloca(Context &context) override;
+  Type type(Context &context) override;
   llvm::Value *multi_assign(Context &context,
                             std::vector<llvm::Value *> values) override;
 
@@ -256,6 +261,8 @@ class VariableListNode : public MultiAssignableNode, public ASTAggregateNode {
   llvm::Value *codegen(Context &context) override;
   std::vector<llvm::Value *> codegen_aggregate(Context &context) override;
   llvm::Value *assign(Context &context, llvm::Value *value) override;
+  llvm::Value *llvm_alloca(Context &context) override;
+  Type type(Context &context) override;
   llvm::Value *multi_assign(Context &context,
                             std::vector<llvm::Value *> values) override;
 
@@ -292,11 +299,36 @@ class ArrayAccessNode : public AssignableNode {
   ArrayAccessNode(const char *name, ASTNode *index);
 
   llvm::Value *codegen(Context &context) override;
+  llvm::Value *llvm_alloca(Context &context) override;
+  Type type(Context &context) override;
   llvm::Value *assign(Context &context, llvm::Value *value) override;
 
  private:
   std::string name_;
   std::unique_ptr<ASTNode> index_;
+};
+
+class GetAddressNode : public ASTNode {
+ public:
+  explicit GetAddressNode(ASTNode *node);
+
+  llvm::Value *codegen(Context &context) override;
+
+ private:
+  std::unique_ptr<ASTNode> node_;
+};
+
+class DereferenceNode : public AssignableNode {
+ public:
+  explicit DereferenceNode(ASTNode *node);
+
+  llvm::Value *codegen(Context &context) override;
+  llvm::Value *llvm_alloca(Context &context) override;
+  Type type(Context &context) override;
+  llvm::Value *assign(Context &context, llvm::Value *value) override;
+
+ private:
+  std::unique_ptr<ASTNode> node_;
 };
 
 class AST {

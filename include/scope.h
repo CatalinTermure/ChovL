@@ -11,29 +11,32 @@
 
 namespace chovl {
 
-enum class AggregateType { kSingular, kArray };
-enum class PrimitiveType { kNone, kI32, kF32, kChar };
+enum class AggregateType : uint8_t { kSingular, kArray };
+enum class IndirectionType : uint8_t { kNone, kPointer };
+enum class PrimitiveType : uint8_t { kNone, kI32, kF32, kChar };
 
 struct Type {
-  explicit Type(PrimitiveType kind)
-      : kind_(kind), aggregate_kind_(AggregateType::kSingular) {}
-  Type(PrimitiveType kind, size_t size)
-      : kind_(kind), aggregate_kind_(AggregateType::kArray), size_(size) {}
+  Type(PrimitiveType kind, IndirectionType indirection)
+      : kind_(kind),
+        aggregate_kind_(AggregateType::kSingular),
+        indirection_(indirection),
+        size_(1) {}
+  Type(PrimitiveType kind, size_t size, IndirectionType indirection)
+      : kind_(kind),
+        aggregate_kind_(AggregateType::kArray),
+        size_(size),
+        indirection_(indirection) {}
 
   explicit Type(llvm::Type *type);
 
-  Type(const Type &) = default;
-  Type &operator=(const Type &) = default;
-
-  Type(Type &&) = default;
-  Type &operator=(Type &&) = default;
-
   llvm::Type *llvm_type(Context &context) const;
   PrimitiveType kind() const { return kind_; }
+  IndirectionType indirection() const { return indirection_; }
 
  private:
   PrimitiveType kind_;
   AggregateType aggregate_kind_;
+  IndirectionType indirection_;
   size_t size_;
 };
 
@@ -53,6 +56,7 @@ class SymbolicValue {
   llvm::Type *llvm_type(Context &context) const {
     return type_.llvm_type(context);
   }
+  Type type() const { return type_; }
 
  private:
   llvm::Value *value_;
@@ -62,7 +66,6 @@ class SymbolicValue {
 
 class SymbolTable {
  public:
-  SymbolTable() = default;
   void AddSymbol(const std::string &name, SymbolicValue value);
   SymbolicValue &GetSymbol(const std::string &name);
   const SymbolicValue &GetSymbol(const std::string &name) const;

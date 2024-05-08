@@ -1,6 +1,22 @@
 #include "scope.h"
 
 namespace chovl {
+namespace {
+llvm::Type* GetLLVMType(PrimitiveType kind, Context& context) {
+  switch (kind) {
+    case PrimitiveType::kI32:
+      return llvm::Type::getInt32Ty(context.llvm_context);
+    case PrimitiveType::kF32:
+      return llvm::Type::getFloatTy(context.llvm_context);
+    case PrimitiveType::kChar:
+      return llvm::Type::getInt8Ty(context.llvm_context);
+    case PrimitiveType::kNone:
+      return llvm::Type::getVoidTy(context.llvm_context);
+  }
+  return nullptr;
+}
+}  // namespace
+
 Type::Type(llvm::Type* type) {
   aggregate_kind_ = AggregateType::kSingular;
   if (type->isIntegerTy(32)) {
@@ -26,31 +42,14 @@ Type::Type(llvm::Type* type) {
 }
 
 llvm::Type* Type::llvm_type(Context& context) const {
+  if (indirection_ == IndirectionType::kPointer) {
+    return llvm::PointerType::getUnqual(GetLLVMType(kind_, context));
+  }
   switch (aggregate_kind_) {
     case AggregateType::kSingular:
-      switch (kind_) {
-        case PrimitiveType::kI32:
-          return llvm::Type::getInt32Ty(context.llvm_context);
-        case PrimitiveType::kF32:
-          return llvm::Type::getFloatTy(context.llvm_context);
-        case PrimitiveType::kChar:
-          return llvm::Type::getInt8Ty(context.llvm_context);
-        case PrimitiveType::kNone:
-          return llvm::Type::getVoidTy(context.llvm_context);
-      }
-      break;
+      return GetLLVMType(kind_, context);
     case AggregateType::kArray:
-      switch (kind_) {
-        case PrimitiveType::kI32:
-          return llvm::ArrayType::get(llvm::Type::getInt32Ty(context.llvm_context), size_);
-        case PrimitiveType::kF32:
-          return llvm::ArrayType::get(llvm::Type::getFloatTy(context.llvm_context), size_);
-        case PrimitiveType::kChar:
-          return llvm::ArrayType::get(llvm::Type::getInt8Ty(context.llvm_context), size_);
-        case PrimitiveType::kNone:
-          return nullptr;
-      }
-      break;
+      return llvm::ArrayType::get(GetLLVMType(kind_, context), size_);
   }
 
   return nullptr;

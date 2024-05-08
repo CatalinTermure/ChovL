@@ -33,6 +33,10 @@ llvm::Value* CastValue(Context& context, llvm::Value* src, llvm::Type* src_type,
     return context.llvm_builder->CreateFPToSI(src, dst_type);
   }
 
+  if (src_type->isArrayTy() && dst_type->isPointerTy()) {
+    return context.llvm_builder->CreatePointerCast(src, dst_type);
+  }
+
   std::string err_msg;
   llvm::raw_string_ostream rso(err_msg);
   rso << "Cannot cast from ";
@@ -234,6 +238,16 @@ llvm::Value* VariableNode::assign(Context& context, llvm::Value* val) {
   return AssignValue(context, val, sym.llvm_alloca(), sym.llvm_type(context));
 }
 
+llvm::Value* VariableNode::llvm_alloca(Context& context) {
+  SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
+  return sym.llvm_alloca();
+}
+
+Type VariableNode::type(Context& context) {
+  SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
+  return sym.type();
+}
+
 llvm::Value* VariableNode::multi_assign(Context& context,
                                         std::vector<llvm::Value*> values) {
   SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
@@ -359,6 +373,23 @@ llvm::Value* ArrayAccessNode::codegen(Context& context) {
   return context.llvm_builder->CreateLoad(element_type, ptr);
 }
 
+llvm::Value* ArrayAccessNode::llvm_alloca(Context& context) {
+  SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
+  auto element_type =
+      llvm::cast<llvm::ArrayType>(sym.llvm_alloca()->getAllocatedType())
+          ->getElementType();
+  llvm::Value* idx = index_->codegen(context);
+  return context.llvm_builder->CreateGEP(element_type, sym.llvm_alloca(), idx);
+}
+
+Type ArrayAccessNode::type(Context& context) {
+  SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
+  auto element_type =
+      llvm::cast<llvm::ArrayType>(sym.llvm_alloca()->getAllocatedType())
+          ->getElementType();
+  return Type(element_type);
+}
+
 llvm::Value* ArrayAccessNode::assign(Context& context, llvm::Value* val) {
   SymbolicValue& sym = context.symbol_table->GetSymbol(name_);
   auto element_type =
@@ -416,6 +447,14 @@ llvm::Value* VariableListNode::assign(Context& context, llvm::Value* value) {
   return nullptr;
 }
 
+llvm::Value* VariableListNode::llvm_alloca(Context& context) {
+  throw std::runtime_error("VariableListNode cannot be used as an expression");
+}
+
+Type VariableListNode::type(Context& context) {
+  throw std::runtime_error("VariableListNode cannot be used as an expression");
+}
+
 llvm::Value* VariableListNode::multi_assign(Context& context,
                                             std::vector<llvm::Value*> values) {
   if (values.size() != nodes_.size()) {
@@ -427,6 +466,59 @@ llvm::Value* VariableListNode::multi_assign(Context& context,
   }
 
   return nullptr;
+}
+
+GetAddressNode::GetAddressNode(ASTNode* node) : node_(node) {
+  if (dynamic_cast<AssignableNode*>(node) == nullptr) {
+    throw std::runtime_error("GetAddressNode can only take assignable nodes");
+  }
+}
+
+llvm::Value* GetAddressNode::codegen(Context& context) {
+  return dynamic_cast<AssignableNode*>(node_.get())->llvm_alloca(context);
+}
+
+DereferenceNode::DereferenceNode(ASTNode* node) : node_(node) {
+  if (dynamic_cast<AssignableNode*>(node) == nullptr) {
+    throw std::runtime_error("DereferenceNode can only take assignable nodes");
+  }
+}
+
+llvm::Value* DereferenceNode::codegen(Context& context) {
+  AssignableNode* assignable = dynamic_cast<AssignableNode*>(node_.get());
+  llvm::Value* ptr_ptr = assignable->llvm_alloca(context);
+  llvm::Value* ptr = context.llvm_builder->CreateLoad(
+      llvm::PointerType::get(context.llvm_context, 0), ptr_ptr);
+  Type type = assignable->type(context);
+  if (type.indirection() != IndirectionType::kPointer) {
+    throw std::runtime_error("Cannot dereference non-pointer type");
+  }
+  Type pointee_type = Type(type.kind(), IndirectionType::kNone);
+  return context.llvm_builder->CreateLoad(pointee_type.llvm_type(context), ptr);
+}
+
+llvm::Value* DereferenceNode::llvm_alloca(Context& context) {
+  return codegen(context);
+}
+
+Type DereferenceNode::type(Context& context) {
+  AssignableNode* assignable = dynamic_cast<AssignableNode*>(node_.get());
+  Type type = assignable->type(context);
+  if (type.indirection() != IndirectionType::kPointer) {
+    throw std::runtime_error("Cannot dereference non-pointer type");
+  }
+  return Type(type.kind(), IndirectionType::kNone);
+}
+
+llvm::Value* DereferenceNode::assign(Context& context, llvm::Value* value) {
+  AssignableNode* assignable = dynamic_cast<AssignableNode*>(node_.get());
+  llvm::Value* ptr = assignable->llvm_alloca(context);
+  Type type = assignable->type(context);
+  if (type.indirection() != IndirectionType::kPointer) {
+    throw std::runtime_error("Cannot dereference non-pointer type");
+  }
+  Type pointee_type = Type(type.kind(), IndirectionType::kNone);
+  return AssignValue(context, value, ptr, pointee_type.llvm_type(context));
 }
 
 }  // namespace chovl

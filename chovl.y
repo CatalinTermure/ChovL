@@ -49,7 +49,7 @@ void yyerror(const char *s) {
 %type <op> additive_operator multiplicative_operator conditional_operator conditional_composition_operator
 
 %token OPEN_BRACK CLOSED_BRACK OPEN_SQ_BRACK CLOSED_SQ_BRACK
-%token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR COMMA
+%token OPEN_PAREN CLOSED_PAREN ARROW SEPARATOR COMMA REF
 %token KW_FN KW_I32 KW_F32 KW_AS KW_CHAR KW_IF KW_THEN KW_ELSE
 %token OP_ASSIGN
 %token <str> IDENTIFIER STRING_LITERAL
@@ -78,7 +78,7 @@ function_prototype : function_declaration SEPARATOR { $$ = $1; }
                    ;
 
 function_declaration : KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN ARROW type_identifier { $$ = new chovl::FunctionDeclNode($2, $4, $7); }
-                     | KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::Type(chovl::PrimitiveType::kNone))); }
+                     | KW_FN IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($2, $4, new chovl::TypeNode(chovl::Type(chovl::PrimitiveType::kNone, chovl::IndirectionType::kNone))); }
                      | KW_FN type_identifier IDENTIFIER OPEN_PAREN formal_param_list CLOSED_PAREN { $$ = new chovl::FunctionDeclNode($3, $5, $2); }
                      ;
 
@@ -98,8 +98,9 @@ primitive_type : KW_I32 { $$ = chovl::PrimitiveType::kI32; }
                | KW_CHAR { $$ = chovl::PrimitiveType::kChar; }
                ;
 
-type_identifier : primitive_type { $$ = new chovl::TypeNode(chovl::Type($1)); }
-                | primitive_type OPEN_SQ_BRACK I32 CLOSED_SQ_BRACK { $$ = new chovl::TypeNode(chovl::Type($1, $3)); }
+type_identifier : primitive_type { $$ = new chovl::TypeNode(chovl::Type($1, chovl::IndirectionType::kNone)); }
+                | primitive_type OPEN_SQ_BRACK I32 CLOSED_SQ_BRACK { $$ = new chovl::TypeNode(chovl::Type($1, $3, chovl::IndirectionType::kNone)); }
+                | primitive_type REF { $$ = new chovl::TypeNode(chovl::Type($1, chovl::IndirectionType::kPointer)); }
                 ;
 
 function_body : OP_ASSIGN expression SEPARATOR { $$ = $2; }
@@ -173,6 +174,8 @@ primary_expression : constant { $$ = $1; }
                    | block_expression { $$ = $1; }
                    | assignable_value { $$ = $1; }
                    | KW_IF primary_expression KW_THEN primary_expression KW_ELSE primary_expression { $$ = new chovl::CondExprNode($2, $4, $6); }
+                   | REF assignable_value { $$ = new chovl::GetAddressNode($2); }
+                   | OP_MUL assignable_value { $$ = new chovl::DereferenceNode($2); }
                    ;
 
 binary_conditional_expression : conditional_expression conditional_composition_operator conditional_expression { $$ = new chovl::BinaryExprNode($2, $1, $3); }
