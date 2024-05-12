@@ -1,3 +1,5 @@
+fn foo(i32& arr);
+
 fn i32 main() {
   i32 x = 5;
   i32& y = &x;
@@ -7,5 +9,6 @@ fn i32 main() {
   i32 z = *y;
   y = &arr[0];
   z = *y;
+  foo(arr as i32&);
   0
 }

@@ -6,13 +6,13 @@ fn i32 main() {
 
   
   if (y > x) then {
-    putchar('O');
-    putchar('K');
+    putchar('O' as i32);
+    putchar('K' as i32);
     0
   } else {
-    putchar('B');
-    putchar('A');
-    putchar('D');
+    putchar('B' as i32);
+    putchar('A' as i32);
+    putchar('D' as i32);
     1
   }
 }

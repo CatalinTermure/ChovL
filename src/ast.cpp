@@ -33,10 +33,6 @@ llvm::Value* CastValue(Context& context, llvm::Value* src, llvm::Type* src_type,
     return context.llvm_builder->CreateFPToSI(src, dst_type);
   }
 
-  if (src_type->isArrayTy() && dst_type->isPointerTy()) {
-    return context.llvm_builder->CreatePointerCast(src, dst_type);
-  }
-
   std::string err_msg;
   llvm::raw_string_ostream rso(err_msg);
   rso << "Cannot cast from ";
@@ -164,6 +160,13 @@ llvm::Value* CastOpNode::codegen(Context& context) {
   llvm::Value* src = value_->codegen(context);
   llvm::Type* src_type = src->getType();
 
+  if (src_type->isArrayTy() && dst_type->isPointerTy()) {
+    llvm::Value* ptr =
+        dynamic_cast<AssignableNode*>(value_.get())->llvm_alloca(context);
+    return context.llvm_builder->CreateGEP(src_type->getArrayElementType(), ptr,
+                                           context.llvm_builder->getInt32(0));
+  }
+
   return CastValue(context, src, src_type, dst_type);
 }
 
@@ -179,6 +182,22 @@ llvm::Value* FunctionCallNode::codegen(Context& context) {
   }
 
   std::vector<llvm::Value*> args = params_->codegen_aggregate(context);
+
+  for (size_t i = 0; i < args.size(); ++i) {
+    llvm::Type* param_type = func->getFunctionType()->getParamType(i);
+    if (param_type != args[i]->getType()) {
+      std::string err_msg;
+      llvm::raw_string_ostream rso(err_msg);
+      rso << "In function call to " << identifier_ << ":\n";
+      rso << "Argument " << i << " has type ";
+      args[i]->getType()->print(rso);
+      rso << " but expected ";
+      param_type->print(rso);
+      rso << "\n";
+      throw std::runtime_error(rso.str());
+    }
+  }
+
   return context.llvm_builder->CreateCall(func, args);
 }
 

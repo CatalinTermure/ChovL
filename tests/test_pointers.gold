@@ -1,3 +1,5 @@
+declare void @foo(ptr)
+
 define i32 @main() {
 entry:
   %z = alloca i32, align 4
@@ -26,5 +28,8 @@ entry:
   %8 = load ptr, ptr %y, align 8
   %9 = load i32, ptr %8, align 4
   store i32 %9, ptr %z, align 4
+  %arr2 = load [5 x i32], ptr %arr, align 4
+  %10 = getelementptr i32, ptr %arr, i32 0
+  call void @foo(ptr %10)
   ret i32 0
 }

@@ -14,14 +14,14 @@ entry:
   br i1 %cmptmp, label %then, label %else
 
 then:                                             ; preds = %entry
-  %0 = call i32 @putchar(i8 79)
-  %1 = call i32 @putchar(i8 75)
+  %0 = call i32 @putchar(i32 79)
+  %1 = call i32 @putchar(i32 75)
   br label %ifcont
 
 else:                                             ; preds = %entry
-  %2 = call i32 @putchar(i8 66)
-  %3 = call i32 @putchar(i8 65)
-  %4 = call i32 @putchar(i8 68)
+  %2 = call i32 @putchar(i32 66)
+  %3 = call i32 @putchar(i32 65)
+  %4 = call i32 @putchar(i32 68)
   br label %ifcont
 
 ifcont:                                           ; preds = %else, %then
