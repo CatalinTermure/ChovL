@@ -1,0 +1,29 @@
+fn i32 putchar(i32 ch);
+
+fn print_nr_aux(i32 x) {
+  if (x != 0) then {
+    print_nr_aux(x / 10);
+    putchar(x % 10 + '0' as i32);
+  }
+}
+
+fn printnr(i32 x) {
+  if (x < 10) then {
+    putchar(x + '0' as i32);
+  } else {
+    print_nr_aux(x / 10);
+    putchar(x % 10 + '0' as i32);
+  }
+}
+
+fn printch(char c) {
+  putchar(c as i32);
+}
+
+fn print_arr(char[10] arr) {
+  printch(arr[0]);
+  printch(arr[1]);
+  printch(arr[2]);
+  printch(arr[3]);
+  printch(arr[4]);
+}

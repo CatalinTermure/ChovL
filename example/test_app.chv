@@ -1,0 +1,27 @@
+fn printch(char ch);
+fn printnr(i32 x);
+fn i32 puts(char &str);
+
+fn i32 fib(i32 n) {
+  if (n == 0) then {
+    0
+  } else if (n == 1) then {
+    1
+  } else {
+    fib(n - 1) + fib(n - 2)
+  }
+}
+
+fn i32 main() {
+  i32 x = 15;
+  printnr(fib(x));
+  printch('\n');
+  char[6] arr = "Hello"; // comment
+  print_arr(arr);
+  printch('\n');
+  i32& y = &x;
+  printnr(*y);
+  printch('\n');
+  puts(arr as char&);
+  0
+}

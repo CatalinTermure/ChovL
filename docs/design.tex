@@ -1,0 +1,63 @@
+\documentclass[11pt,a4paper]{article}
+
+%biblioteci
+% \usepackage{times} % times new roman
+\usepackage{csquotes} % pt warning
+\usepackage{lipsum}
+\usepackage{indentfirst} % pentru ca si primul paragraf sa aiba alineat
+\usepackage{graphicx}  % pentru inserare imagini
+\usepackage{float} % pt asezare imagini in pagina
+\usepackage{hyperref} % pt cuprins cu linkuri catre sectiuni
+\usepackage{minted} % pt cod
+
+\usepackage{biblatex}
+\usepackage{url}
+
+% format document(margin)
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\linespread{1.06} % spatiu intre cuvinte
+\setlength{\parskip}{8pt plus2pt minus2pt} % spatiu intre paragrafe
+
+% widow and orphan lines
+\widowpenalty 10000
+\clubpenalty 10000
+
+\newcommand{\eat}[1]{}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+%puncte si dupa fiecare sectiune in cuprins
+\usepackage{tocloft}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+
+% pentru bibliografie
+\usepackage{biblatex} % Imports biblatex package
+
+% afiseaza mai frumos listele
+\usepackage{enumitem} % ceva control asupra listelor/ enumerarilor
+\setlist{nolistsep,noitemsep}
+
+\setlength{\parskip}{2pt}  % spatiu intre paragrafe
+
+% Fix for csquotes package
+\DeclareQuoteStyle{nil}
+{\textquotedblleft}
+{\textquotedblright}
+{\textquoteleft}
+{\textquoteright}
+
+% Fix for minted package
+\usepackage{minted}
+\usemintedstyle{default}
+
+% Fix for biblatex package
+\usepackage{biblatex}
+\addbibresource{bibliography.bib} % Replace 'bibliography.bib' with the actual name of your bibliography file
+
+
+\begin{document}
+
+\include{start_page.tex}
+\tableofcontents % afiseaza cuprinsul
+\include{docs.tex} % documentatia propriu-zisa
+
+\end{document}

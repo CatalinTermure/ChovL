@@ -8,4 +8,9 @@ tests/*.s
 design.txt
 .vscode/*
 !.vscode/tasks.json
-example/
+example/*
+!example/Makefile
+!example/*.chv
+docs/*
+!docs/*.tex
+!docs/images
